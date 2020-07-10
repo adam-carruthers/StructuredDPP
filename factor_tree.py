@@ -37,9 +37,12 @@ class Node:
     def create_message(self, to, value):
         pass
 
-    def get_connected_nodes(self):
-        yield from self.children
-        if self._parent:
+    def get_connected_nodes(self, excluding=None):
+        for x in self.children:
+            if x == excluding:
+                continue
+            yield x
+        if self.parent and self.parent != excluding:
             yield self.parent
 
     def __str__(self):
@@ -57,6 +60,12 @@ class Factor(Node):
     def __init__(self, get_weight, parent=None, children=None, name=''):
         super(Factor, self).__init__(parent, children, name='Factor'+name)
         self.get_weight = get_weight
+
+    def create_message(self, to, value):
+        for var in self.get_connected_nodes():
+            if var == to:
+                continue
+
 
 
 class FactorTree:
