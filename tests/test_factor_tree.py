@@ -105,7 +105,7 @@ class TestFactor(TestCase):
             'Getting consistent assignments failed for a factor connected to two variables.'
         )
 
-        factor.set_children([child_var_1, child_var_2])
+        factor.children = [child_var_1, child_var_2]
         self.assertListEqual(
             list(factor.get_consistent_assignments(child_var_1, 'a')),
             [

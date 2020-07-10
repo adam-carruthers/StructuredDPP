@@ -1,19 +1,27 @@
 import weakref
+from functools import reduce
 
 
 class Node:
     """
-    A simple node on a standard bidirectional graph.
+    A node on a standard bidirectional graph with message passing.
     Allows for circular references without causing memory leakage.
     """
     def __init__(self, parent=None, children=None, name=None):
         self._parent = weakref.ref(parent) if parent else None
-        self.children = {*children} if children else set()
-        self.generated_messages = {}
+        self._children = {*children} if children else set()
+        self.outgoing_messages = {}
         self.name = name if name else self.__class__.__name__
 
-    def set_children(self, children):
-        self.children = {*children}
+    # Children
+    # The descendant nodes, stored in a set to avoid children being double counted
+    @property
+    def children(self):
+        return self._children
+
+    @children.setter
+    def children(self, children):
+        self._children = {*children}
 
     def add_child(self, child):
         self.children.add(child)
@@ -21,6 +29,10 @@ class Node:
     def add_children(self, children):
         self.children.update(children)
 
+    # Parent
+    # The parent node cannot be referenced directly as that would be a circular reference
+    # (assuming that the parent stores this node as a child)
+    # but the weakref library fixes that, but means we need to add this extra code.
     @property
     def parent(self):
         """
@@ -101,7 +113,7 @@ class Factor(Node):
     def create_message(self, to, value):
         message = None
         for assignment in self.get_consistent_assignments(to, value):
-            incoming_assignment_messages = self.get_incoming_assignment_messages(assignment)
+            incoming_assignment_messages = reduce(lambda x,y: x*y, self.get_incoming_assignment_messages(assignment))
             assignment_value = self.get_weight(assignment)
 
 
