@@ -2,6 +2,10 @@ import weakref
 
 
 class Node:
+    """
+    A simple node on a standard bidirectional graph.
+    Allows for circular references without causing memory leakage.
+    """
     def __init__(self, parent=None, children=None, name=None):
         self._parent = weakref.ref(parent) if parent else None
         self.children = {*children} if children else set()
@@ -54,12 +58,21 @@ class Node:
 
 
 class Variable(Node):
+    """
+    A variable represents one part of one item outputted by an SDPP.
+    It can take a discrete number of fixed values.
+    """
     def __init__(self, allowed_values, parent=None, children=None, name=''):
         super(Variable, self).__init__(parent, children, name='Variable'+name)
         self.allowed_values = allowed_values
 
 
 class Factor(Node):
+    """
+    A factor evaluates variables to which it is connected.
+    Given the variables taking certain values it can then evaluate the quality and diversity features
+    associated with the factor.
+    """
     def __init__(self, get_weight, parent=None, children=None, name=''):
         super(Factor, self).__init__(parent, children, name='Factor'+name)
         self.get_weight = get_weight
@@ -86,9 +99,10 @@ class Factor(Node):
         yield from ({var: value, **subassignment} for subassignment in self.get_subassignment(other_vars))
 
     def create_message(self, to, value):
-        for var in self.get_connected_nodes(excluding=to):
-            for poss_value in var.allowed_values:
-                pass
+        message = None
+        for assignment in self.get_consistent_assignments(to, value):
+            incoming_assignment_messages = self.get_incoming_assignment_messages(assignment)
+            assignment_value = self.get_weight(assignment)
 
 
 class FactorTree:
