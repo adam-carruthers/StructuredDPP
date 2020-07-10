@@ -6,12 +6,23 @@ class Node:
     """
     A node on a standard bidirectional graph with message passing.
     Allows for circular references without causing memory leakage.
+    Also to allow for different systems of addition and multiplication (necessary for second-order semirings)
+    you can set different values for the additive identity and multiplicative identity.
     """
-    def __init__(self, parent=None, children=None, name=None):
+    def __init__(self, parent=None, children=None, name=None, zero=0, one=1):
+        """
+        :param Node parent: Parent node in the tree structure
+        :param list children: Child nodes in the tree structure
+        :param str name: String name for pretty printing
+        :param zero: Additive identity for weights (x + 0 = x), also need x * 0 = 0.
+        :param one: Multiplicative identity for weights (x * 1 = x).
+        """
         self._parent = weakref.ref(parent) if parent else None
         self._children = {*children} if children else set()
         self.outgoing_messages = {}
         self.name = name if name else self.__class__.__name__
+        self.zero = zero
+        self.one = one
 
     # Children
     # The descendant nodes, stored in a set to avoid children being double counted
@@ -106,9 +117,33 @@ class Variable(Node):
     A variable represents one part of one item outputted by an SDPP.
     It can take a discrete number of fixed values.
     """
-    def __init__(self, allowed_values, parent=None, children=None, name=''):
-        super(Variable, self).__init__(parent, children, name='Variable'+name)
+    def __init__(self, allowed_values, parent=None, children=None, name=None, zero=0, one=1):
+        super(Variable, self).__init__(parent, children, name=name if name else 'Variable', zero=zero, one=one)
         self.allowed_values = allowed_values
+
+    def get_incoming_messages_for_value(self, value, exclude=None):
+        """
+        Get the messages associated with a certain variable value
+        :param value: The assignment in {variable: value_of_assignment} form.
+        :param Node exclude: This node's message will be excluded, probs because it is not yet calculated.
+        :yields: A message for each assignment.
+        """
+        var = None
+        try:
+            for var in self.get_connected_nodes(exclude=exclude):
+                yield var.get_outgoing_message(to=self, value=value)
+        except KeyError:
+            raise KeyError(f"{var} didn't have message to {self} with value {value}")
+
+    def create_message(self, to, value):
+        incoming_messages = self.get_incoming_messages_for_value(value, exclude=to)
+        if incoming_messages:
+            return reduce(
+                lambda x,y: x*y,
+                incoming_messages
+            )
+        else:
+            return self.one
 
 
 class Factor(Node):
@@ -117,11 +152,12 @@ class Factor(Node):
     Given the variables taking certain values it can then evaluate the quality and diversity features
     associated with the factor.
     """
-    def __init__(self, get_weight, parent=None, children=None, name=''):
+    def __init__(self, get_weight, parent=None, children=None, name=None, zero=0, one=1):
         """
-        :param get_weight: A function that takes in a dictionary of variables with assignments and returns the weight.
+        :param function get_weight: A function that takes in a dictionary of variables with assignments and returns the
+        weight.
         """
-        super(Factor, self).__init__(parent, children, name='Factor'+name)
+        super(Factor, self).__init__(parent, children, name=name if name else 'Factor', zero=zero, one=one)
         self.get_weight = get_weight
 
     @staticmethod

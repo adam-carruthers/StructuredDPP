@@ -126,7 +126,7 @@ class TestFactor(TestCase):
         def get_weight2(assignment):
             return sum(value for value in assignment.values())
 
-        parent = Variable(allowed_values=[0,1,2,3], name='Parent')
+        parent = Variable(allowed_values=[0,1,2,3], name='ParentVar')
         childless_factor = Factor(get_weight=get_weight1, parent=parent)
         self.assertEqual(
             childless_factor.create_message(to=parent, value=2),
@@ -142,7 +142,7 @@ class TestFactor(TestCase):
             '(aka does not need incoming messages to generate message).'
         )
 
-        children = [Variable(allowed_values=[0,1,2], name=str(i)) for i in range(2)]
+        children = [Variable(allowed_values=[0,1,2], name='Var'+str(i)) for i in range(2)]
         factor = Factor(get_weight=get_weight2, parent=parent, children=children)
         for child in children:
             child.outgoing_messages = {
