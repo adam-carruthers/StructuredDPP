@@ -121,12 +121,12 @@ class TestFactor(TestCase):
 
     def test_create_message(self):
         def get_weight1(assignment):
-            return next(iter(assignment.values()))**2
+            return next(iter(assignment.values())) ** 2
 
         def get_weight2(assignment):
             return sum(value for value in assignment.values())
 
-        parent = Variable(allowed_values=[0,1,2,3], name='ParentVar')
+        parent = Variable(allowed_values=[0, 1, 2, 3], name='ParentVar')
         childless_factor = Factor(get_weight=get_weight1, parent=parent)
         self.assertEqual(
             childless_factor.create_message(to=parent, value=2),
@@ -142,7 +142,7 @@ class TestFactor(TestCase):
             '(aka does not need incoming messages to generate message).'
         )
 
-        children = [Variable(allowed_values=[0,1,2], name='Var'+str(i)) for i in range(2)]
+        children = [Variable(allowed_values=[0, 1, 2], name='Var' + str(i)) for i in range(2)]
         factor = Factor(get_weight=get_weight2, parent=parent, children=children)
         for child in children:
             child.outgoing_messages = {
@@ -155,11 +155,66 @@ class TestFactor(TestCase):
 
         self.assertEqual(
             factor.create_message(to=parent, value=0),
-            (1+1)*1*1 + (1+2)*1*2 * 2 + (2+2)*2*2,
+            (1 + 1) * 1 * 1 + (1 + 2) * 1 * 2 * 2 + (2 + 2) * 2 * 2,
             'Message was not correct value for message to parent with children.'
         )
 
         self.assertEqual(
             factor.create_message(to=parent, value=2),
-            (2+1+1)*1*1 + (2+1+2)*1*2 * 2 + (2+2+2)*2*2
+            (2 + 1 + 1) * 1 * 1 + (2 + 1 + 2) * 1 * 2 * 2 + (2 + 2 + 2) * 2 * 2
+        )
+
+
+class TestVariable(TestCase):
+    def test_create_message(self):
+        parent = Factor(None)
+        childless_var = Variable(allowed_values=[22], parent=parent)
+        self.assertEqual(
+            childless_var.create_message(parent, 9e10),
+            1,
+            'Variable connected message had wrong value when connected to only 1 parent-factor '
+            '(aka did not need incoming messages to generate new message)'
+        )
+        with use_different_semiring(0, 'one'):
+            self.assertEqual(
+                childless_var.create_message(parent, -55),
+                'one',
+                'Variable generated message was wrong with change in semiring settings.'
+            )
+        self.assertEqual(
+            childless_var.create_message(parent, 9e10),
+            1,
+            'Variable generated message was wrong after change in semiring settings.'
+        )
+
+        parentless_var = Variable(allowed_values=[-5])
+        parentless_var.add_child(parent)
+        self.assertEqual(
+            parentless_var.create_message(parent, 9e10),
+            1,
+            'Variable connected message had wrong value when connected to only 1 child-factor '
+            '(aka did not need incoming messages to generate new message)'
+        )
+
+        children = [Factor(None) for i in range(4)]
+        var = Variable(allowed_values='ab', parent=parent, children=children)
+        for i, child in enumerate(children):
+            child.outgoing_messages = {
+                var: {
+                    'a': 5,
+                    'b': i+1
+                }
+            }
+        parent.outgoing_messages = {
+            var: {
+                'b': 100
+            }
+        }
+        self.assertEqual(
+            var.create_message(parent, 'a'),
+            5**4
+        )
+        self.assertEqual(
+            var.create_message(children[0], 'b'),
+            2*3*4*100
         )
