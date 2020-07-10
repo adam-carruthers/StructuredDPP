@@ -52,16 +52,15 @@ class Node:
         self._parent = weakref.ref(parent)
 
     # Helpful graph traversing functions
-    def get_connected_nodes(self, excluding=None):
+    def get_connected_nodes(self, exclude=None):
         """
         Generator that yields all the connected nodes, not distinguishing between parent and children
-        :param Node excluding: If this node is encountered it won't be yeilded.
+        :param Node exclude: If this node is encountered it won't be yeilded.
         """
         for x in self.children:
-            if x == excluding:
-                continue
-            yield x
-        if self.parent and self.parent != excluding:
+            if x != exclude:
+                yield x
+        if self.parent and self.parent != exclude:
             yield self.parent
 
     # Message functions
@@ -119,6 +118,9 @@ class Factor(Node):
     associated with the factor.
     """
     def __init__(self, get_weight, parent=None, children=None, name=''):
+        """
+        :param get_weight: A function that takes in a dictionary of variables with assignments and returns the weight.
+        """
         super(Factor, self).__init__(parent, children, name='Factor'+name)
         self.get_weight = get_weight
 
@@ -142,20 +144,26 @@ class Factor(Node):
         Generator to yield all assignment combinations relating to the factor consistent with var=value
         :yields: A possible assignment combination for each variable.
         """
-        other_vars = list(self.get_connected_nodes(excluding=var))
+        other_vars = list(self.get_connected_nodes(exclude=var))
         if len(other_vars) == 0:
             yield {var: value}
             return
         yield from ({var: value, **subassignment} for subassignment in self.get_assignment_combinations(other_vars))
 
-    def get_incoming_messages_from_assignment(self, assignment):
+    def get_incoming_messages_for_assignment(self, assignment, exclude=None):
         """
         Get the messages associated with a certain assignment dictionary
         :param dict assignment: The assignment in {variable: value_of_assignment} form.
+        :param Node exclude: This node's message will be excluded, probs because it is not yet calculated.
         :yields: A message for each assignment.
         """
-        for var, value in assignment.items():
-            yield var.get_outgoing_message(to=self, value=value)
+        var, value = None, None
+        try:
+            for var, value in assignment.items():
+                if var != exclude:
+                    yield var.get_outgoing_message(to=self, value=value)
+        except KeyError:
+            raise KeyError(f"{var} didn't have message to {self} with value {value}")
 
     def create_message(self, to, value):
         message = None
@@ -170,10 +178,12 @@ class Factor(Node):
                 # times by the info from the contributing variables
                 assignment_value = self.get_weight(assignment) * reduce(
                     lambda x, y: x*y,
-                    self.get_incoming_messages_from_assignment(assignment)
+                    self.get_incoming_messages_for_assignment(assignment, exclude=to)
                 )
             else:  # The factor is a leaf and has no nodes further down to consider. Woop! Easy!
-                assert assignment[0] == to  # The only assignment
+                assert to in assignment  # to better be the key or else we're calculating stuff for unconnected nodes
                 assignment_value = self.get_weight(assignment)
 
             message = message + assignment_value if message else assignment_value
+
+        return message
