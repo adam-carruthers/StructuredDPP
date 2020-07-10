@@ -1,5 +1,5 @@
 from unittest import TestCase
-from factor_tree import Node
+from factor_tree import *
 
 
 class TestNode(TestCase):
@@ -80,4 +80,41 @@ class TestNode(TestCase):
             str(main_node),
             "Node(parent=Beth,3 children)",
             "Name of node with children wrong."
+        )
+
+
+class TestFactor(TestCase):
+    def test_get_consistent_assignments(self):
+        parent_var = Variable(allowed_values=[0,1,2])
+        factor = Factor(None, parent=parent_var)
+        child_var_1, child_var_2 = Variable(allowed_values='ab'), Variable(allowed_values='cd')
+
+        self.assertListEqual(
+            list(factor.get_consistent_assignments(parent_var, 1)),
+            [{parent_var: 1}],
+            'Getting consistent assignments failed for a factor connected to a single variable.'
+        )
+
+        factor.add_children([child_var_1])
+        self.assertListEqual(
+            list(factor.get_consistent_assignments(parent_var, 1)),
+            [
+                {parent_var: 1, child_var_1: 'a'},
+                {parent_var: 1, child_var_1: 'b'}
+            ],
+            'Getting consistent assignments failed for a factor connected to two variables.'
+        )
+
+        factor.set_children([child_var_1, child_var_2])
+        self.assertListEqual(
+            list(factor.get_consistent_assignments(child_var_1, 'a')),
+            [
+                {child_var_1: 'a', child_var_2: 'c', parent_var: 0},
+                {child_var_1: 'a', child_var_2: 'c', parent_var: 1},
+                {child_var_1: 'a', child_var_2: 'c', parent_var: 2},
+                {child_var_1: 'a', child_var_2: 'd', parent_var: 0},
+                {child_var_1: 'a', child_var_2: 'd', parent_var: 1},
+                {child_var_1: 'a', child_var_2: 'd', parent_var: 2},
+            ],
+            'Getting consistent assignments failed for a factor connected to three variables.'
         )

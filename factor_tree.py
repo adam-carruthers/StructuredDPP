@@ -49,6 +49,9 @@ class Node:
         return f'{self.name}(parent={self.parent.name if self._parent else None},' \
                f'{len(self.children)} children)'
 
+    def __repr__(self):
+        return str(self)
+
 
 class Variable(Node):
     def __init__(self, allowed_values, parent=None, children=None, name=''):
@@ -61,11 +64,31 @@ class Factor(Node):
         super(Factor, self).__init__(parent, children, name='Factor'+name)
         self.get_weight = get_weight
 
-    def create_message(self, to, value):
-        for var in self.get_connected_nodes():
-            if var == to:
-                continue
+    @staticmethod
+    def get_subassignment(vars):
+        if len(vars) == 0:
+            raise Exception('Subassignment function must be given at least one variable to assign.')
+        if len(vars) == 1:
+            yield from ({vars[0]: value} for value in vars[0].allowed_values)
+        else:
+            for value in vars[0].allowed_values:
+                yield from ({vars[0]: value, **subassignment} for subassignment in Factor.get_subassignment(vars[1:]))
 
+    def get_consistent_assignments(self, var, value):
+        """
+        Generator to yield all possible assignments to a connected node
+        consistent with node=value
+        """
+        other_vars = list(self.get_connected_nodes(excluding=var))
+        if len(other_vars) == 0:
+            yield {var: value}
+            return
+        yield from ({var: value, **subassignment} for subassignment in self.get_subassignment(other_vars))
+
+    def create_message(self, to, value):
+        for var in self.get_connected_nodes(excluding=to):
+            for poss_value in var.allowed_values:
+                pass
 
 
 class FactorTree:
