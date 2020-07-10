@@ -2,10 +2,11 @@ import weakref
 
 
 class Node:
-    def __init__(self, parent=None, children=None):
+    def __init__(self, parent=None, children=None, name=None):
         self._parent = weakref.ref(parent) if parent else None
-        self.children = {*children} if children else None
+        self.children = {*children} if children else set()
         self.generated_messages = {}
+        self.name = name if name else self.__class__.__name__
 
     def set_children(self, children):
         self.children = {*children}
@@ -13,7 +14,7 @@ class Node:
     def add_child(self, child):
         self.children.add(child)
 
-    def update_children(self, children):
+    def add_children(self, children):
         self.children.update(children)
 
     @property
@@ -41,16 +42,20 @@ class Node:
         if self._parent:
             yield self.parent
 
+    def __str__(self):
+        return f'{self.name}(parent={self.parent.name if self._parent else None},' \
+               f'{len(self.children)} children)'
+
 
 class Variable(Node):
-    def __init__(self, allowed_values, parent=None, children=None):
-        super(Variable, self).__init__(parent, children)
+    def __init__(self, allowed_values, parent=None, children=None, name=''):
+        super(Variable, self).__init__(parent, children, name='Variable'+name)
         self.allowed_values = allowed_values
 
 
 class Factor(Node):
-    def __init__(self, get_weight, parent=None, children=None):
-        super(Factor, self).__init__(parent, children)
+    def __init__(self, get_weight, parent=None, children=None, name=''):
+        super(Factor, self).__init__(parent, children, name='Factor'+name)
         self.get_weight = get_weight
 
 
