@@ -1,6 +1,6 @@
 # StructuredDPP
 
-A project to implement a structured determinental point process from Kulesza and Tuscar \[2009\]. A DPP is a probability distribution that selectes a subset of a bigger set and encodes the idea that similar items in the subset "repel" each other. The structure comes from a way of splitting the items in the subset up into variables with associated factors. We then use message passing and second order semirings to efficiently work with complex DPPs.
+A project to implement a structured determinantal point process from Kulesza and Tuscar \[2009\]. A DPP is a probability distribution that selectes a subset of a bigger set and encodes the idea that similar items in the subset "repel" each other. The structure comes from a way of splitting the items in the subset up into variables with associated factors. We then use message passing and second order semirings to efficiently work with complex DPPs.
 
 # Bibliography
 
