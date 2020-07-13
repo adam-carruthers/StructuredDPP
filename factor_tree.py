@@ -119,10 +119,25 @@ class Node:
 
     def create_message(self, to, value):
         """
-        A function that calculates the message to node 'to' about value 'value'
+        A function that calculates the message to node 'to' about value 'value'.
+        Will require that messages further back in the tree are already calculated.
         :param Node to: The node that is being told the value.
         :param value: The value being assigned to the node.
         :return: The message corresponding to the assignment.
+        """
+        raise NotImplementedError()
+
+    def create_and_save_message(self, to, value):
+        message = self.create_message(to, value)
+        if self.outgoing_messages.get(to, None):
+            self.outgoing_messages[to][value] = message
+        else:
+            self.outgoing_messages[to] = {value: message}
+        return message
+
+    def create_all_messages_to(self, to):
+        """
+        Creates all the messages you could send to 'to', saves and returns them.
         """
         raise NotImplementedError()
 
@@ -138,6 +153,7 @@ class Variable(Node):
     """
     A variable represents one part of one item outputted by an SDPP.
     It can take a discrete number of fixed values.
+    All connected nodes must be factors.
     """
     def __init__(self, allowed_values, parent=None, children=None, name=None):
         super(Variable, self).__init__(parent, children, name=name if name else 'Variable')
@@ -167,12 +183,21 @@ class Variable(Node):
         else:
             return _semiring_settings['one']
 
+    def create_all_messages_to(self, to):
+        outgoing_messages_to = self.outgoing_messages.get(to, {})
+        outgoing_messages_to.update({
+            val: self.create_message(to, val) for val in self.allowed_values
+        })
+        self.outgoing_messages[to] = outgoing_messages_to
+        return outgoing_messages_to
+
 
 class Factor(Node):
     """
     A factor evaluates variables to which it is connected.
     Given the variables taking certain values it can then evaluate the quality and diversity features
     associated with the factor.
+    All connected nodes (parent, children) must be Variables
     """
     def __init__(self, get_weight, parent=None, children=None, name=None):
         """
@@ -245,3 +270,11 @@ class Factor(Node):
             message = message + assignment_value if message else assignment_value
 
         return message
+
+    def create_all_messages_to(self, to):
+        outgoing_messages_to = self.outgoing_messages.get(to, {})
+        outgoing_messages_to.update({
+            val: self.create_message(to, val) for val in to.allowed_values
+        })
+        self.outgoing_messages[to] = outgoing_messages_to
+        return outgoing_messages_to
