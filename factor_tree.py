@@ -1,7 +1,8 @@
 import weakref
 from functools import reduce
 from contextlib import contextmanager
-
+from warnings import warn
+from typing import List, Set, Any
 
 # Sometimes the factor tree will need to use different multiplicative and additive systems (semiring)
 # Hence here we define a global dictionary containing the additive and multiplicative identities
@@ -41,6 +42,10 @@ class Node:
         :param list children: Child nodes in the tree structure
         :param str name: String name for pretty printing
         """
+        if parent or children:
+            warn("Avoid setting the parent or children attributes on a node at initialisation, "
+                 "let the factor tree set them instead.",
+                 RuntimeWarning)
         self._parent = weakref.ref(parent) if parent else None
         self._children = {*children} if children else set()
         self.outgoing_messages = {}
@@ -249,6 +254,7 @@ class Factor(Node):
             raise KeyError(f"{var} didn't have message to {self} with value {value}")
 
     def create_message(self, to, value):
+        assert to is not None, "Somehow this node is trying to send a message to None"
         message = None
         for assignment in self.get_consistent_assignments(to, value):
             # Sum together the weight of each assignment
@@ -278,3 +284,44 @@ class Factor(Node):
         })
         self.outgoing_messages[to] = outgoing_messages_to
         return outgoing_messages_to
+
+
+class FactorTree:
+    def __init__(self, root_node):
+        self.levels: List[Set[Node]]
+        self.root = root_node
+        self.levels = [{root_node}]
+        self.item_directory = {root_node: 0}
+
+    def add_parent_edges(self, parent, *children):
+        """
+        Adds an edge in the graph between the parent and the child
+        :param Node parent: The parent, will be higher in the tree than child, must already be in the tree.
+        :param Node child: The child, a descendant of parent.
+        If the parent is a variable node, the child must be a factor, or the reverse.
+        """
+        if (isinstance(parent, Variable) and any(not isinstance(child, Factor) for child in children)) or \
+            (isinstance(parent, Factor) and any(not isinstance(child, Variable) for child in children)) or \
+                not (isinstance(parent, Variable) or isinstance(parent, Factor)):
+            raise ValueError('The parent must be a variable or factor, and the children must be the opposite of the '
+                             'parent. Aka a variable parent must have factor children and visa versa.')
+        parent_level = self.item_directory.get(parent, None)
+        if parent_level is None:
+            raise KeyError('Parent must be added to tree before you can add children to it.')
+        parent.add_children(children)
+        for child in children:
+            child.parent = parent
+            self.item_directory[child] = parent_level + 1
+        if len(self.levels) - 1 <= parent_level:  # Does the next level exist yet?
+            self.levels.append({*children})
+        else:
+            self.levels[parent_level + 1].update(children)
+
+    def generate_up_messages_on_level(self, level):
+        node: Node
+        for node in self.levels[level]:
+            node.create_all_messages_to(node.parent)
+
+    def run_forward_pass(self):
+        for level in reversed(range(1, len(self.levels))):
+            self.generate_up_messages_on_level(level)
