@@ -376,7 +376,26 @@ class TestFactorTree(TestCase):
             }
         )
 
-    def test_run_forward_pass(self):
+        ftree.generate_down_messages_on_level(0)
+        self.assertDictEqual(
+            root_var.outgoing_messages,
+            {
+                factor1: {
+                    0: 72,
+                    1: 88,
+                    2: 104,
+                    3: 120
+                },
+                factor2: {
+                    0: 26,
+                    1: 32,
+                    2: 38,
+                    3: 44
+                }
+            }
+        )
+
+    def test_run_forward_backward_pass(self):
         def get_weight1(assignment):
             return sum(value for value in assignment.values())
 
@@ -440,3 +459,13 @@ class TestFactorTree(TestCase):
                 }
             }
         )
+
+        # Run a backwards pass
+        # I would struggle to work out the backwards pass values manually so I'll assume their correct
+        # Below we just test that it doesn't crash and does generate a message on lower levels
+        ftree.run_backward_pass()
+        self.assertIn(
+            baby_factor,
+            extra_var1.outgoing_messages
+        )
+        print(extra_var1.outgoing_messages)

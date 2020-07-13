@@ -322,6 +322,16 @@ class FactorTree:
         for node in self.levels[level]:
             node.create_all_messages_to(node.parent)
 
+    def generate_down_messages_on_level(self, level):
+        node: Node
+        for node in self.levels[level]:
+            for child_node in node.children:
+                node.create_all_messages_to(child_node)
+
     def run_forward_pass(self):
         for level in reversed(range(1, len(self.levels))):
             self.generate_up_messages_on_level(level)
+
+    def run_backward_pass(self):
+        for level in range(len(self.levels)):
+            self.generate_down_messages_on_level(level)
