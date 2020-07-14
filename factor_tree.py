@@ -166,6 +166,14 @@ class Variable(Node):
         self.outgoing_messages[to] = outgoing_messages_to
         return outgoing_messages_to
 
+    def calculate_beliefs(self):
+        self.create_all_messages_to(None)
+
+    def calculate_sum_belief(self, recalculate=False):
+        if recalculate or None not in self.outgoing_messages:
+            self.calculate_beliefs()
+        return reduce(lambda x,y: x+y, self.outgoing_messages[None].values())
+
 
 class Factor(Node):
     """
@@ -224,7 +232,6 @@ class Factor(Node):
             raise KeyError(f"{var} didn't have message to {self} with value {value}")
 
     def create_message(self, to, value):
-        assert to is not None, "Somehow this node is trying to send a message to None"
         message = None
         for assignment in self.get_consistent_assignments(to, value):
             # Sum together the weight of each assignment

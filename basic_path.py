@@ -62,6 +62,12 @@ for i in range(1, 5):
     nodes_created.extend((transition_factor, current_var, one_var_factor))
 
 ftree = FactorTree.create_from_connected_nodes(nodes_created)
+
 if __name__ == '__main__':
+    # Show the generated Factor Tree
     print(ftree)
     ftree.visualise_graph()
+
+    # Do forward pass
+    ftree.run_forward_pass()
+    print('Done!')
