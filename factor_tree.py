@@ -16,10 +16,6 @@ class Node:
         :param list children: Child nodes in the tree structure
         :param str name: String name for pretty printing
         """
-        if parent or children:
-            warn("Avoid setting the parent or children attributes on a node at initialisation, "
-                 "let the factor tree set them instead.",
-                 RuntimeWarning)
         self._parent = weakref.ref(parent) if parent else None
         self._children = {*children} if children else set()
         self.outgoing_messages = {}
@@ -274,11 +270,18 @@ class FactorTree:
         :param Node child: The child, a descendant of parent.
         If the parent is a variable node, the child must be a factor, or the reverse.
         """
+        # Integrity checks
         if (isinstance(parent, Variable) and any(not isinstance(child, Factor) for child in children)) or \
             (isinstance(parent, Factor) and any(not isinstance(child, Variable) for child in children)) or \
                 not (isinstance(parent, Variable) or isinstance(parent, Factor)):
             raise ValueError('The parent must be a variable or factor, and the children must be the opposite of the '
                              'parent. Aka a variable parent must have factor children and visa versa.')
+        if any(child.parent not in (None, parent) for child in children):
+            raise ValueError(f'Child has parent attribute set already and it is not correct.')
+        if any(child in self.item_directory for child in children):
+            raise ValueError('Trying to add node that is already in the tree.')
+
+        # Work out which level the parent is at
         parent_level = self.item_directory.get(parent, None)
         if parent_level is None:
             raise KeyError('Parent must be added to tree before you can add children to it.')
@@ -309,3 +312,54 @@ class FactorTree:
     def run_backward_pass(self):
         for level in range(len(self.levels)):
             self.generate_down_messages_on_level(level)
+
+    def nodes_to_add_based_on_parents(self, nodes):
+        """
+        Generator to get the nodes who's parents are in the tree
+        Only used for create_from_connected_nodes
+        """
+        return filter(lambda x: x.parent in self.item_directory, nodes)
+
+    @classmethod
+    def create_from_connected_nodes(cls, nodes):
+        """
+        Takes nodes already connected in a tree structure and creates a FactorTree of them
+        :param list nodes: The nodes which must be already connected through the parent attribute.
+        The children attribute should be unset!
+        :return: Created FactorTree
+        """
+        # Integrity check
+        if any(len(node.children) > 0 for node in nodes):
+            warn('Children attributes are already set for node being added to FactorTree. '
+                 'Ideally you should let the children attribute be set by the FactorTree. ', RuntimeWarning)
+
+        # Find the root and make sure it's the only one
+        parentless_nodes = [node for node in nodes if node.parent is None]
+        if len(parentless_nodes) == 0:
+            raise ValueError('Nodes passed to FactorTree must have a root node. '
+                             'This node would have no parent set.')
+        if len(parentless_nodes) > 1:
+            raise ValueError('Invalid tree, every node in the tree excluding the root would have a parent.')
+        root = parentless_nodes[0]
+
+        # Create the tree!
+        ftree = cls(root_node=root)
+
+        # We see if we're done by keeping track of the nodes remaining, and the ones that need to be added next
+        nodes_remaining = {*nodes}
+        nodes_remaining.remove(root)
+        next_to_add = list(ftree.nodes_to_add_based_on_parents(nodes_remaining))
+        while True:
+            if len(next_to_add) == 0 or len(nodes_remaining) == 0:
+                if len(next_to_add) == 0 and len(nodes_remaining) == 0:
+                    return ftree  # Success!
+                else:
+                    raise ValueError('Not all the nodes in the tree were added. '
+                                     'This might be because of a cycle in the graph or other invalid structure. '
+                                     'Check the tree is valid and that you have listed all the nodes that need to be '
+                                     'added to the tree as an argument.')
+            node: Node
+            for node in next_to_add:
+                ftree.add_parent_edges(node.parent, node)
+                nodes_remaining.remove(node)
+            next_to_add = list(ftree.nodes_to_add_based_on_parents(nodes_remaining))

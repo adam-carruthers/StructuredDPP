@@ -86,7 +86,7 @@ class TestNode(TestCase):
 class TestFactor(TestCase):
     def test_get_consistent_assignments(self):
         parent_var = Variable(allowed_values=[0, 1, 2])
-        factor = Factor(None, parent=parent_var)
+        factor = Factor(lambda: None, parent=parent_var)
         child_var_1, child_var_2 = Variable(allowed_values='ab'), Variable(allowed_values='cd')
 
         self.assertListEqual(
@@ -167,7 +167,7 @@ class TestFactor(TestCase):
 
 class TestVariable(TestCase):
     def test_create_message(self):
-        parent = Factor(None)
+        parent = Factor(lambda: None)
         childless_var = Variable(allowed_values=[22], parent=parent)
         self.assertEqual(
             childless_var.create_message(parent, 9e10),
@@ -190,7 +190,7 @@ class TestVariable(TestCase):
             '(aka did not need incoming messages to generate new message)'
         )
 
-        children = [Factor(None) for i in range(4)]
+        children = [Factor(lambda: None) for _ in range(4)]
         var = Variable(allowed_values='ab', parent=parent, children=children)
         for i, child in enumerate(children):
             child.outgoing_messages = {var: {'a': 5, 'b': i + 1}}
@@ -464,3 +464,38 @@ class TestFactorTree(TestCase):
             extra_var1.outgoing_messages
         )
         print(extra_var1.outgoing_messages)
+
+    def test_create_from_connected_nodes(self):
+        # Tree nodes
+        root = Variable([1], name='Root')
+
+        f1_1 = Factor(lambda: None, name='F1_1')  # Not setting the parent yet for extra testing
+        v2_1 = Variable([1], parent=f1_1, name='V2_1')
+        f3_1 = Factor(lambda: None, parent=v2_1, name='F3_1')
+        v4_1 = Variable([1], parent=f3_1, name='V4_1')
+
+        f1_2 = Factor(lambda: None, parent=root, name='F2_1')
+        v2_2 = Variable([1], parent=f1_2, name='V2_2')
+        v2_3 = Variable([1], parent=f1_2, name='V2_3')
+
+        # Unconnected tree
+        with self.assertRaises(ValueError, msg='A graph where there was no clear root node was allowed'):
+            FactorTree.create_from_connected_nodes([root, f1_1, v2_1, f3_1, v4_1])
+
+        # Loopy graphs
+        f1_1.parent = v4_1
+        with self.assertRaises(ValueError, msg='A graph with loops was allowed to be added as a tree'):
+            FactorTree.create_from_connected_nodes([root, f1_1, v2_1, f3_1, v4_1])
+        with self.assertRaises(ValueError, msg='A graph with loops was allowed to be added as a tree'):
+            FactorTree.create_from_connected_nodes([root, f1_1, v2_1, f3_1, v4_1, f1_2, v2_2, v2_3])
+
+        # Correct graphs
+        f1_1.parent = root
+        self.assertListEqual(
+            FactorTree.create_from_connected_nodes([root, f1_1, v2_1, f3_1, v4_1]).levels,
+            [{root}, {f1_1}, {v2_1}, {f3_1}, {v4_1}]
+        )
+        self.assertListEqual(
+            FactorTree.create_from_connected_nodes([root, f1_1, v2_1, f3_1, v4_1, f1_2, v2_2, v2_3]).levels,
+            [{root}, {f1_1, f1_2}, {v2_1, v2_2, v2_3}, {f3_1}, {v4_1}]
+        )
