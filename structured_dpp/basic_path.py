@@ -6,7 +6,7 @@ import scipy.stats as scistat
 
 # First, gotta define some stuff to be able to compute the paths
 # This is where we define the functions that calculate the weight
-N_POSSIBLE_POSITIONS = 50
+N_POSSIBLE_POSITIONS = 3
 POSSIBLE_POSITIONS = np.arange(N_POSSIBLE_POSITIONS)
 ZEROS_VECTOR = np.zeros(N_POSSIBLE_POSITIONS)
 ZEROS_MATRIX = np.zeros((N_POSSIBLE_POSITIONS, N_POSSIBLE_POSITIONS))
@@ -55,7 +55,7 @@ factor_for_root = Factor(root_weight, parent=root, name='Fac0')
 # Then create the rest in a chain
 current_var = root
 nodes_created = [root, factor_for_root]
-for i in range(1, 5):
+for i in range(1, 3):
     transition_factor = Factor(transition_weight, parent=current_var, name=f'Fac{i-1}-{i}')
     current_var = Variable(POSSIBLE_POSITIONS, parent=transition_factor, name=f'Var{i}')
     one_var_factor = Factor(one_var_weight, parent=current_var, name=f'Fac{i}')
