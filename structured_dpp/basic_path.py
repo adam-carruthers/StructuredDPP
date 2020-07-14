@@ -1,5 +1,5 @@
-from factor_tree import Factor, Variable, FactorTree
-from semiring import Order2VectSemiring as O2VS
+from structured_dpp.factor_tree import FactorTree, Factor, Variable
+from structured_dpp.semiring import Order2VectSemiring as O2VS
 import numpy as np
 import scipy.linalg as scila
 import scipy.stats as scistat

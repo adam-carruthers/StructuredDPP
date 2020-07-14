@@ -1,5 +1,7 @@
 from unittest import TestCase
-from factor_tree import *
+from structured_dpp.factor_tree.factor_tree import *
+from structured_dpp.factor_tree.node import Node
+from structured_dpp.factor_tree.variable import Variable
 
 
 class TestNode(TestCase):

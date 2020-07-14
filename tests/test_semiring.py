@@ -1,5 +1,5 @@
 from unittest import TestCase
-from semiring import Order2VectSemiring
+from structured_dpp.semiring import Order2VectSemiring
 import numpy as np
 
 
