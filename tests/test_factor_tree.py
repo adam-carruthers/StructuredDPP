@@ -175,12 +175,6 @@ class TestVariable(TestCase):
             'Variable connected message had wrong value when connected to only 1 parent-factor '
             '(aka did not need incoming messages to generate new message)'
         )
-        with use_different_semiring(0, 'one'):
-            self.assertEqual(
-                childless_var.create_message(parent, -55),
-                'one',
-                'Variable generated message was wrong with change in semiring settings.'
-            )
         self.assertEqual(
             childless_var.create_message(parent, 9e10),
             1,
@@ -212,13 +206,14 @@ class TestVariable(TestCase):
         )
 
 
+# noinspection DuplicatedCode
 class TestFactorTree(TestCase):
     def test_add_parent_edges(self):
-        root_var = Variable(allowed_values=[0,1], name='VarRoot')
+        root_var = Variable(allowed_values=[0, 1], name='VarRoot')
         ftree = FactorTree(root_node=root_var)
         children = [Factor(lambda: None, name=f'Fact{i}') for i in range(4)]
         nonroot_var = Variable(allowed_values=[0], name='VarNonRoot')
-        with self.assertRaises(KeyError, msg='Was allowed to add children to a node not in the tree') as context:
+        with self.assertRaises(KeyError, msg='Was allowed to add children to a node not in the tree'):
             ftree.add_parent_edges(nonroot_var, children[1])
         with self.assertRaises(ValueError, msg='Add edges allowed a factor to have an edge to a different factor'):
             ftree.add_parent_edges(root_var, nonroot_var)

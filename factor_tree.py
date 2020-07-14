@@ -2,33 +2,7 @@ import weakref
 from functools import reduce
 from contextlib import contextmanager
 from warnings import warn
-from typing import List, Set, Any
-
-# Sometimes the factor tree will need to use different multiplicative and additive systems (semiring)
-# Hence here we define a global dictionary containing the additive and multiplicative identities
-# The additive identity is zero and satisfies
-# x + 0 = x
-# x * 0 = 0
-# The multiplicative identity is one and satisfies
-# x * 1 = 1
-# The only things that need to be set here are the zero and one, the different systems of addition and multiplication
-# can be defined in the objects that are passed through the network.
-DEFAULT_SEMIRING_SETTINGS = {
-    'zero': 0,
-    'one': 1
-}
-_semiring_settings = DEFAULT_SEMIRING_SETTINGS.copy()
-# To ensure that the semiring settings do not cause bugs, we will use a function to set them different within a context
-# but always set them back.
-# This uses a python feature called context, all code that uses a particular semiring needs to be called in a with.
-@contextmanager
-def use_different_semiring(zero, one):
-    global _semiring_settings
-    try:
-        _semiring_settings = {'zero': zero, 'one': one}
-        yield _semiring_settings
-    finally:
-        _semiring_settings = DEFAULT_SEMIRING_SETTINGS.copy()
+from typing import List, Set
 
 
 class Node:
@@ -186,7 +160,7 @@ class Variable(Node):
                 incoming_messages
             )
         else:
-            return _semiring_settings['one']
+            return 1
 
     def create_all_messages_to(self, to):
         outgoing_messages_to = self.outgoing_messages.get(to, {})
