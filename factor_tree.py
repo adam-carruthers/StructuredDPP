@@ -363,3 +363,42 @@ class FactorTree:
                 ftree.add_parent_edges(node.parent, node)
                 nodes_remaining.remove(node)
             next_to_add = list(ftree.nodes_to_add_based_on_parents(nodes_remaining))
+
+    def __str__(self):
+        return f'FactorTree({len(self.item_directory)} nodes, {len(self.levels)} levels)'
+
+    def __repr__(self):
+        return str(self)
+
+    def convert_to_nx_graph(self):
+        import networkx as nx
+
+        G = nx.DiGraph()
+        for node in self.item_directory.keys():
+            if len(node.children) == 0:
+                continue
+            G.add_edges_from([(node, child) for child in node.children])
+
+        return G
+
+    def visualise_graph(self):
+        import matplotlib.pyplot as plt
+        import networkx as nx
+
+        G = self.convert_to_nx_graph()
+        pos = nx.drawing.spring_layout(G.to_undirected())
+
+        nx.draw_networkx_nodes(
+            G, pos, node_shape='o', node_color='c',
+            nodelist=[node for node in self.item_directory.keys() if isinstance(node, Variable)]
+        )
+        nx.draw_networkx_nodes(
+            G, pos, node_shape='s', node_color='r',
+            nodelist=[node for node in self.item_directory.keys() if isinstance(node, Factor)]
+        )
+        nx.draw_networkx_labels(
+            G, pos,
+            labels={node: node.name for node in pos.keys()}
+        )
+        nx.draw_networkx_edges(G, pos)
+        plt.show()
