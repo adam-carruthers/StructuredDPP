@@ -156,3 +156,17 @@ class TestBasicSDPP(TestCase):
             np.allclose(calc_C, ftree_C),
             "Calculated C was different in SDPP compared to expected value."
         )
+
+        C00 = sum(
+            ((p0 / n_positions) \
+            * scistat.norm.pdf((p0 - p1) / movement_scale) \
+            * scistat.norm.pdf((p2 - p1) / movement_scale))**2 * (
+                position_diversity_vectors[p0][0] + position_diversity_vectors[p1][0] + position_diversity_vectors[p2][0]
+            )**2
+            for p0, p1, p2 in possible_paths
+        )
+        self.assertAlmostEqual(
+            ftree_C[0, 0],
+            C00,
+            msg="Theoretical and calculated value of C[0, 0] don't match"
+        )
