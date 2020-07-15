@@ -29,6 +29,8 @@ class Order2VectSemiring(namedtuple('Order2VectSemiring', ['q', 'phi', 'psi', 'C
             return self
         if other == 1:
             return self._replace(q=self.q+1)
+        if not isinstance(other, Order2VectSemiring):
+            return NotImplemented
         return Order2VectSemiring(self.q + other.q, self.phi + other.phi, self.psi + other.psi, self.C + other.C)
 
     def __radd__(self, other):
@@ -36,6 +38,8 @@ class Order2VectSemiring(namedtuple('Order2VectSemiring', ['q', 'phi', 'psi', 'C
             return self
         if other == 1:
             return Order2VectSemiring(self.q + 1, self.phi, self.psi, self.C)
+        if not isinstance(other, Order2VectSemiring):
+            return NotImplemented
         raise ValueError('Incorrect semiring addition.')
 
     def __mul__(self, other):
@@ -43,6 +47,8 @@ class Order2VectSemiring(namedtuple('Order2VectSemiring', ['q', 'phi', 'psi', 'C
             return 0
         if other == 1:
             return self
+        if not isinstance(other, Order2VectSemiring):
+            return NotImplemented
         return Order2VectSemiring(self.q * other.q,
                                   self.q * other.phi + other.q * self.phi,
                                   self.q * other.psi + other.q * self.psi,
@@ -54,13 +60,17 @@ class Order2VectSemiring(namedtuple('Order2VectSemiring', ['q', 'phi', 'psi', 'C
             return 0
         if other == 1:
             return self
-        raise ValueError('Incorrect semiring multiplication.')
+        return NotImplemented
 
     def __eq__(self, other):
         if other in (0, 1):
             return self.q == other and np.all(self.phi == 0) and np.all(self.psi == 0) and np.all(self.C == 0)
+        if not isinstance(other, Order2VectSemiring):
+            return NotImplemented
         return self.q == other.q and self.D == other.D and np.array_equal(self.phi, other.phi) \
             and np.array_equal(self.psi, other.psi) and np.array_equal(self.C, other.C)
 
     def __ne__(self, other):  # Overrides tuple __ne__ just in case
+        if not isinstance(other, Order2VectSemiring):
+            return NotImplemented
         return not self == other

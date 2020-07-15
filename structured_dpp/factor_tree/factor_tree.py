@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 class FactorTree:
     def __init__(self, root_node):
+        if not isinstance(root_node, Variable):
+            warn('For a factor tree your root node should probably be a variable.')
         self.root = root_node
         self.levels = [{root_node}]
         self.item_directory = {root_node: 0}
@@ -45,6 +47,12 @@ class FactorTree:
             self.levels.append({*children})
         else:
             self.levels[parent_level + 1].update(children)
+
+    def get_factors(self):
+        """Iterates through the factors in the FactorTree"""
+        for node in self.item_directory.keys():
+            if isinstance(node, Factor):
+                yield node
 
     def generate_up_messages_on_level(self, level, run=None):
         node: Node

@@ -1,6 +1,7 @@
 from functools import reduce
 
-from structured_dpp.factor_tree.node import Node
+from .node import Node
+from .run_types import SamplingRun
 
 
 class Variable(Node):
@@ -30,6 +31,8 @@ class Variable(Node):
             raise KeyError(f"{var} didn't have message to {self} with value {value} on run {run}")
 
     def create_message(self, to, value, run=None):
+        if run and isinstance(run, SamplingRun) and self in run.fixed_vars:
+            return 1 if value == run.fixed_vars[self] else 0
         incoming_messages = list(self.get_incoming_messages_for_value(value, exclude=to, run=run))
         if incoming_messages:
             return reduce(

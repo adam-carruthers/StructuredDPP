@@ -2,17 +2,27 @@ from enum import Enum, unique
 from collections import namedtuple
 
 
-@unique
-class RunCategories(Enum):
-    def __repr__(self):
-        return f'Run:{self.name}'
+class BaseRun:
+    def __init__(self, uid=None):
+        self.uid = uid
 
-    C = 0
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.uid == other.uid
+
+    def __hash__(self):
+        return hash((type(self), self.uid))
 
 
-class CRun(namedtuple('CRun', ['category'])):
-    __slots__ = ()
-
-    def __new__(cls):
-        return tuple.__new__(cls, (RunCategories.C,))
+class CRun(BaseRun):
+    pass
 C_RUN = CRun()
+
+
+class BaseFixedVarsRun(BaseRun):
+    def __init__(self, uid=None):
+        super(BaseFixedVarsRun, self).__init__(uid)
+        self.fixed_vars = {}
+
+
+class SamplingRun(BaseFixedVarsRun):
+    pass
