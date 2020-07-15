@@ -3,6 +3,8 @@ import numpy as np
 from structured_dpp.factor_tree.factor import Factor
 from structured_dpp.semiring import Order2VectSemiring
 
+from .run_types import CRun
+
 
 class SDPPFactor(Factor):
     """
@@ -35,5 +37,8 @@ class SDPPFactor(Factor):
             dvm = np.outer(dv, dv)
         return Order2VectSemiring(q, q*dv, q*dv, q*dvm)
 
-    def get_weight(self, assignments):
-        return self.default_weight(assignments)
+    def get_weight(self, assignments, run=CRun()):
+        if run == CRun():
+            return self.default_weight(assignments)
+        else:
+            raise ValueError('When running an SDPP factor run you must choose a valid run type.')

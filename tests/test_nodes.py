@@ -147,13 +147,13 @@ class TestFactor(TestCase):
         children = [Variable(allowed_values=[0, 1, 2], name='Var' + str(i)) for i in range(2)]
         factor = Factor(get_weight=get_weight2, parent=parent, children=children)
         for child in children:
-            child.outgoing_messages = {
+            child.outgoing_messages = {None: {
                 factor: {
                     0: 0,
                     1: 1,
                     2: 2
                 }
-            }
+            }}
 
         self.assertEqual(
             factor.create_message(to=parent, value=0),
@@ -195,14 +195,14 @@ class TestVariable(TestCase):
         children = [Factor(lambda: None) for _ in range(4)]
         var = Variable(allowed_values='ab', parent=parent, children=children)
         for i, child in enumerate(children):
-            child.outgoing_messages = {var: {'a': 5, 'b': i + 1}}
-        parent.outgoing_messages = {var: {'b': 100}}
+            child.outgoing_messages = {'run': {var: {'a': 5, 'b': i + 1}}}
+        parent.outgoing_messages = {'run': {var: {'b': 100}}}
 
         self.assertEqual(
-            var.create_message(parent, 'a'),
+            var.create_message(parent, 'a', run='run'),
             5 ** 4
         )
         self.assertEqual(
-            var.create_message(children[0], 'b'),
+            var.create_message(children[0], 'b', run='run'),
             2 * 3 * 4 * 100
         )

@@ -3,10 +3,8 @@ from unittest.case import TestCase
 import numpy as np
 import scipy.linalg as scila
 import scipy.stats as scistat
-from functools import reduce
 
 from structured_dpp.factor_tree import *
-from structured_dpp.semiring import Order2VectSemiring as O2VS
 
 
 # noinspection DuplicatedCode
@@ -97,8 +95,8 @@ class TestBasicSDPP(TestCase):
                                                         var_1, one_var_factor_1,
                                                         transition_factor1_2,
                                                         var_2, one_var_factor_2])
-        ftree.run_forward_pass()
-        ftree_C = root.calculate_sum_belief()[3]
+        ftree.run_forward_pass(run=C_RUN)
+        ftree_C = root.calculate_sum_belief(run=C_RUN)[3]
 
         # We calculate and SDPP the long way
         possible_paths = [

@@ -19,7 +19,7 @@ class Factor(Node):
         super(Factor, self).__init__(parent, children, name=name if name else 'Factor')
         self._get_weight = get_weight
 
-    def get_weight(self, assignments):
+    def get_weight(self, assignments, run=None):
         return self._get_weight(assignments)
 
     @staticmethod
@@ -48,22 +48,24 @@ class Factor(Node):
             return
         yield from ({var: value, **subassignment} for subassignment in self.get_assignment_combinations(other_vars))
 
-    def get_incoming_messages_for_assignment(self, assignment, exclude=None):
+    def get_incoming_messages_for_assignment(self, assignment, exclude=None, run=None):
         """
         Get the messages associated with a certain assignment dictionary
         :param dict assignment: The assignment in {variable: value_of_assignment} form.
         :param Node exclude: This node's message will be excluded, probs because it is not yet calculated.
+        :param run: Which run or calculation the tree is running, in this function, it may hint to a node to use a
+        different way of creating the message (e.g: a different get_weight function for a factor)
         :yields: A message for each assignment.
         """
         var, value = None, None
         try:
             for var, value in assignment.items():
                 if var != exclude:
-                    yield var.get_outgoing_message(to=self, value=value)
+                    yield var.get_outgoing_message(to=self, value=value, run=run)
         except KeyError:
-            raise KeyError(f"{var} didn't have message to {self} with value {value}")
+            raise KeyError(f"{var} didn't have message to {self} with value {value} on run {run}")
 
-    def create_message(self, to, value):
+    def create_message(self, to, value, run=None):
         message = None
         for assignment in self.get_consistent_assignments(to, value):
             # Sum together the weight of each assignment
@@ -74,22 +76,23 @@ class Factor(Node):
             if len(assignment) > 1:  # The factor is higher in the tree than other variables
                 # The message of the assignment is the weight for this factor
                 # times by the info from the contributing variables
-                assignment_value = self.get_weight(assignment) * reduce(
+                assignment_value = self.get_weight(assignment, run=run) * reduce(
                     lambda x, y: x*y,
-                    self.get_incoming_messages_for_assignment(assignment, exclude=to)
+                    self.get_incoming_messages_for_assignment(assignment, exclude=to, run=run)
                 )
             else:  # The factor is a leaf and has no nodes further down to consider. Woop! Easy!
                 assert to in assignment  # to better be the key or else we're calculating stuff for unconnected nodes
-                assignment_value = self.get_weight(assignment)
+                assignment_value = self.get_weight(assignment, run=run)
 
             message = message + assignment_value if message else assignment_value
 
         return message
 
-    def create_all_messages_to(self, to):
-        outgoing_messages_to = self.outgoing_messages.get(to, {})
-        outgoing_messages_to.update({
-            val: self.create_message(to, val) for val in to.allowed_values
-        })
-        self.outgoing_messages[to] = outgoing_messages_to
-        return outgoing_messages_to
+    def create_all_messages_to(self, to, run=None):
+        if self.outgoing_messages.get(run, None) is None:
+            self.outgoing_messages[run] = {}
+        new_messages = {
+            val: self.create_message(to, val, run=run) for val in to.allowed_values
+        }
+        self.outgoing_messages[run][to] = new_messages
+        return new_messages

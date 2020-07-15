@@ -46,26 +46,26 @@ class FactorTree:
         else:
             self.levels[parent_level + 1].update(children)
 
-    def generate_up_messages_on_level(self, level):
+    def generate_up_messages_on_level(self, level, run=None):
         node: Node
         for node in self.levels[level]:
-            node.create_all_messages_to(node.parent)
+            node.create_all_messages_to(node.parent, run=run)
 
-    def generate_down_messages_on_level(self, level):
+    def generate_down_messages_on_level(self, level, run=None):
         node: Node
         for node in self.levels[level]:
             for child_node in node.children:
-                node.create_all_messages_to(child_node)
+                node.create_all_messages_to(child_node, run=run)
 
-    def run_forward_pass(self):
+    def run_forward_pass(self, run=None):
         for level in reversed(range(1, len(self.levels))):
             logger.info(f'Forward pass level {level}')
-            self.generate_up_messages_on_level(level)
+            self.generate_up_messages_on_level(level, run=run)
 
-    def run_backward_pass(self):
+    def run_backward_pass(self, run=None):
         for level in range(len(self.levels)):
             logger.info(f'Backward pass level {level}')
-            self.generate_down_messages_on_level(level)
+            self.generate_down_messages_on_level(level, run=run)
 
     def nodes_to_add_based_on_parents(self, nodes):
         """

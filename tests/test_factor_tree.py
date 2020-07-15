@@ -75,24 +75,24 @@ class TestFactorTree(TestCase):
         ftree.generate_up_messages_on_level(3)
         self.assertDictEqual(
             baby_factor.outgoing_messages,
-            {extra_var1: {0: 0, 1: 1, 2: 0.5}}  # Corresponding to the weight the factor gives the variable values
+            {None: {extra_var1: {0: 0, 1: 1, 2: 0.5}}}  # Corresponding to the weight the factor gives the variable values
         )
 
         ftree.generate_up_messages_on_level(2)
         for var in child_vars1:
             self.assertDictEqual(
                 var.outgoing_messages,
-                {factor1: {1: 1, 2: 1}}
+                {None: {factor1: {1: 1, 2: 1}}}
             )
         self.assertDictEqual(
             extra_var1.outgoing_messages,
-            {factor1: {0: 0, 1: 1, 2: 0.5}}
+            {None: {factor1: {0: 0, 1: 1, 2: 0.5}}}
         )
 
         ftree.generate_up_messages_on_level(1)
         self.assertDictEqual(
             factor1.outgoing_messages,
-            {root_var: {
+            {None: {root_var: {
                 0: (
                     (0 + 1 + 1 + 1) * 1 * 1 * 1 +
                     (0 + 1 + 1 + 2) * 1 * 1 * 0.5 +
@@ -133,11 +133,11 @@ class TestFactorTree(TestCase):
                     (3 + 2 + 2 + 1) * 1 * 1 * 1 +
                     (3 + 2 + 2 + 2) * 1 * 1 * 0.5
                 )
-            }}
+            }}}
         )
         self.assertDictEqual(
             factor2.outgoing_messages,
-            {
+            {None: {
                 root_var: {
                     0: (
                         2 * (0 + 1 + 1 + 1) +
@@ -164,13 +164,13 @@ class TestFactorTree(TestCase):
                         2 * (3 + 2 + 2 + 2)
                     )
                 }
-            }
+            }}
         )
 
         ftree.generate_down_messages_on_level(0)
         self.assertDictEqual(
             root_var.outgoing_messages,
-            {
+            {None: {
                 factor1: {
                     0: 72,
                     1: 88,
@@ -183,7 +183,7 @@ class TestFactorTree(TestCase):
                     2: 38,
                     3: 44
                 }
-            }
+            }}
         )
 
     def test_run_forward_backward_pass(self):
@@ -217,11 +217,11 @@ class TestFactorTree(TestCase):
         ftree.add_parent_edges(factor2, *child_vars2)
         ftree.add_parent_edges(extra_var1, baby_factor)
 
-        ftree.run_forward_pass()
+        ftree.run_forward_pass(run=-7)
 
         self.assertDictEqual(
             factor2.outgoing_messages,
-            {
+            {-7: {
                 root_var: {
                     0: (
                             2 * (0 + 1 + 1 + 1) +
@@ -248,16 +248,16 @@ class TestFactorTree(TestCase):
                             2 * (3 + 2 + 2 + 2)
                     )
                 }
-            }
+            }}
         )
 
         # Run a backwards pass
         # I would struggle to work out the backwards pass values manually so I'll assume their correct
         # Below we just test that it doesn't crash and does generate a message on lower levels
-        ftree.run_backward_pass()
+        ftree.run_backward_pass(run=-7)
         self.assertIn(
             baby_factor,
-            extra_var1.outgoing_messages
+            extra_var1.outgoing_messages[-7]
         )
         print(extra_var1.outgoing_messages)
 

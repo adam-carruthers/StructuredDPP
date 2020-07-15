@@ -79,34 +79,38 @@ class Node:
     # weight of that assignment from nodes lower down in the tree.
     # This allows nodes higher up in the tree to use information about weights lower in the tree to calculate their
     # own weights.
-    def get_outgoing_message(self, to, value):
+    def get_outgoing_message(self, to, value, run=None):
         """
         A function to get the *already calculated* value message from this node to another node
         :param Node to: The node that is being told the value.
         :param value: The value that the message is about.
+        :param run: Which run or calculation the tree is running, so that relevant messages are stored correctly.
+        It can be any hashable but you should probably use something from run_types
         :return: The message that was generated.
         """
-        return self.outgoing_messages[to][value]
+        return self.outgoing_messages[run][to][value]
 
-    def create_message(self, to, value):
+    def create_message(self, to, value, run=None):
         """
         A function that calculates the message to node 'to' about value 'value'.
         Will require that messages further back in the tree are already calculated.
         :param Node to: The node that is being told the value.
         :param value: The value being assigned to the node.
+        :param run: Which run or calculation the tree is running, in this function, it may hint to a node to use a
+        different way of creating the message (e.g: a different get_weight function for a factor)
         :return: The message corresponding to the assignment.
         """
         raise NotImplementedError()
 
-    def create_and_save_message(self, to, value):
-        message = self.create_message(to, value)
+    def create_and_save_message(self, to, value, run=None):
+        message = self.create_message(run, to, value)
         if self.outgoing_messages.get(to, None):
-            self.outgoing_messages[to][value] = message
+            self.outgoing_messages[run][to][value] = message
         else:
-            self.outgoing_messages[to] = {value: message}
+            self.outgoing_messages[run][to] = {value: message}
         return message
 
-    def create_all_messages_to(self, to):
+    def create_all_messages_to(self, to, run=None):
         """
         Creates all the messages you could send to 'to', saves and returns them.
         """
