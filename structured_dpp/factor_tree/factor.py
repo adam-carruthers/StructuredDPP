@@ -1,4 +1,5 @@
 from functools import reduce
+from typing import Optional
 
 from structured_dpp.factor_tree.node import Node
 

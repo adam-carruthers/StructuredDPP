@@ -1,14 +1,16 @@
 from warnings import warn
-from typing import List, Set
+import logging
 
 from structured_dpp.factor_tree.factor import Factor
 from structured_dpp.factor_tree.node import Node
 from structured_dpp.factor_tree.variable import Variable
 
 
+logger = logging.getLogger(__name__)
+
+
 class FactorTree:
     def __init__(self, root_node):
-        self.levels: List[Set[Node]]
         self.root = root_node
         self.levels = [{root_node}]
         self.item_directory = {root_node: 0}
@@ -57,10 +59,12 @@ class FactorTree:
 
     def run_forward_pass(self):
         for level in reversed(range(1, len(self.levels))):
+            logger.info(f'Forward pass level {level}')
             self.generate_up_messages_on_level(level)
 
     def run_backward_pass(self):
         for level in range(len(self.levels)):
+            logger.info(f'Backward pass level {level}')
             self.generate_down_messages_on_level(level)
 
     def nodes_to_add_based_on_parents(self, nodes):
@@ -132,11 +136,12 @@ class FactorTree:
         return G
 
     def visualise_graph(self):
+        logger.info('Starting graph visualisation')
         import matplotlib.pyplot as plt
         import networkx as nx
 
         G = self.convert_to_nx_graph()
-        pos = nx.drawing.spring_layout(G.to_undirected())
+        pos = nx.drawing.spring_layout(G.to_undirected(), iterations=150)
 
         nx.draw_networkx_nodes(
             G, pos, node_shape='o', node_color='c',

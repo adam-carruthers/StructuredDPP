@@ -1,6 +1,5 @@
 from unittest import TestCase
-from structured_dpp.factor_tree.factor_tree import *
-from structured_dpp.factor_tree.variable import Variable
+from structured_dpp.factor_tree import *
 
 
 # noinspection DuplicatedCode

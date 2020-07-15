@@ -51,4 +51,4 @@ class Variable(Node):
     def calculate_sum_belief(self, recalculate=False):
         if recalculate or None not in self.outgoing_messages:
             self.calculate_beliefs()
-        return reduce(lambda x,y: x+y, self.outgoing_messages[None].values())
+        return sum(self.outgoing_messages[None].values())

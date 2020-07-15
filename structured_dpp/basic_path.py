@@ -1,73 +1,89 @@
-from structured_dpp.factor_tree import FactorTree, Factor, Variable
-from structured_dpp.semiring import Order2VectSemiring as O2VS
+from structured_dpp.factor_tree import FactorTree, SDPPFactor, Variable, convert_var_assignment
 import numpy as np
 import scipy.linalg as scila
 import scipy.stats as scistat
+import logging
 
-# First, gotta define some stuff to be able to compute the paths
-# This is where we define the functions that calculate the weight
-N_POSSIBLE_POSITIONS = 3
-POSSIBLE_POSITIONS = np.arange(N_POSSIBLE_POSITIONS)
-ZEROS_VECTOR = np.zeros(N_POSSIBLE_POSITIONS)
-ZEROS_MATRIX = np.zeros((N_POSSIBLE_POSITIONS, N_POSSIBLE_POSITIONS))
+logging.basicConfig(level=logging.INFO)
+
+# Constants
+N_POSITIONS = 50
+N_VARIABLES = 50
+MOVEMENT_SCALE = 5
+POSSIBLE_POSITIONS = np.arange(N_POSITIONS)
+ZEROS_VECTOR = np.zeros(N_POSITIONS)
+ZEROS_MATRIX = np.zeros((N_POSITIONS, N_POSITIONS))
 
 
+# Precalculate diversity vectors and matrices for transitions
 def position_diversity_vector(pos):
     distance = POSSIBLE_POSITIONS - pos
     unnormed = np.exp(-distance**2)
     return unnormed/scila.norm(unnormed)
-
-
 POSITION_DIVERSITY_VECTORS = {pos: position_diversity_vector(pos) for pos in POSSIBLE_POSITIONS}
 POSITION_DIVERSITY_MATRICES = {pos: np.outer(POSITION_DIVERSITY_VECTORS[pos], POSITION_DIVERSITY_VECTORS[pos])
                                for pos in POSSIBLE_POSITIONS}
-POSITION_DIVERSITY_O2VS = {
-    pos: O2VS(1, POSITION_DIVERSITY_VECTORS[pos], POSITION_DIVERSITY_VECTORS[pos], POSITION_DIVERSITY_MATRICES[pos])
-    for pos in POSSIBLE_POSITIONS
-}
 
 
-def one_var_weight(assignments):
-    pos = next(iter(assignments.values()))
-    return POSITION_DIVERSITY_O2VS[pos]
+# Specify the quality and diversity factors for the SDPP
+def quality_one(assignment):
+    return 1
 
+@convert_var_assignment
+def one_var_diversity(pos):
+    return POSITION_DIVERSITY_VECTORS[pos]
 
-def root_weight(assignments):
-    pos = next(iter(assignments.values()))
-    q = pos/50
-    pos_dv = POSITION_DIVERSITY_VECTORS[pos]
-    return O2VS(q, q*pos_dv, q*pos_dv, q*POSITION_DIVERSITY_MATRICES[pos])
+@convert_var_assignment
+def one_var_diversity_matrix(pos):
+    return POSITION_DIVERSITY_MATRICES[pos]
 
+@convert_var_assignment
+def transition_quality(pos1, pos2):
+    return scistat.norm.pdf((pos1 - pos2) / MOVEMENT_SCALE)
 
-MOVEMENT_SCALE = 5
+def zero_diversity(assignment):
+    return ZEROS_VECTOR
 
+def zero_diversity_matrix(assignment):
+    return ZEROS_MATRIX
 
-def transition_weight(assignments):
-    pos1, pos2 = assignments.values()
-    q = scistat.norm.pdf((pos1 - pos2)/5)
-    return O2VS(q, ZEROS_VECTOR, ZEROS_VECTOR, ZEROS_MATRIX)
+@convert_var_assignment
+def root_var_quality(pos):
+    return pos/N_POSITIONS
 
 
 # Now create the nodes
 # Create the start nodes
 root = Variable(POSSIBLE_POSITIONS, name='RootVar0')
-factor_for_root = Factor(root_weight, parent=root, name='Fac0')
+factor_for_root = SDPPFactor(get_quality=root_var_quality,
+                             get_diversity=one_var_diversity,
+                             get_diversity_matrix=one_var_diversity_matrix,
+                             parent=root,
+                             name='Fac0')
 # Then create the rest in a chain
 current_var = root
 nodes_created = [root, factor_for_root]
-for i in range(1, 3):
-    transition_factor = Factor(transition_weight, parent=current_var, name=f'Fac{i-1}-{i}')
+for i in range(1, N_VARIABLES):
+    transition_factor = SDPPFactor(get_quality=transition_quality,
+                                   get_diversity=zero_diversity,
+                                   get_diversity_matrix=zero_diversity_matrix,
+                                   parent=current_var,
+                                   name=f'Fac{i-1}-{i}')
     current_var = Variable(POSSIBLE_POSITIONS, parent=transition_factor, name=f'Var{i}')
-    one_var_factor = Factor(one_var_weight, parent=current_var, name=f'Fac{i}')
+    one_var_factor = SDPPFactor(get_quality=quality_one,
+                                get_diversity=one_var_diversity,
+                                get_diversity_matrix=one_var_diversity_matrix,
+                                parent=current_var,
+                                name=f'Fac{i}')
     nodes_created.extend((transition_factor, current_var, one_var_factor))
 
 ftree = FactorTree.create_from_connected_nodes(nodes_created)
 
 if __name__ == '__main__':
-    # Show the generated Factor Tree
-    print(ftree)
+    # Draw graph
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(13, 13))
     ftree.visualise_graph()
-
     # Do forward pass
     ftree.run_forward_pass()
-    print('Done!')
+    C = root.calculate_sum_belief()[3]
