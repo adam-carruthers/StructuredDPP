@@ -116,9 +116,6 @@ class Node:
         """
         raise NotImplementedError()
 
-    def __str__(self):
+    def __repr__(self):
         return f'{self.name}(parent={self.parent.name if self._parent else None},' \
                f'{len(self.children)} children)'
-
-    def __repr__(self):
-        return str(self)

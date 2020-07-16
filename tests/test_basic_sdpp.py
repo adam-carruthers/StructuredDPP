@@ -3,8 +3,10 @@ from unittest.case import TestCase
 import numpy as np
 import scipy.linalg as scila
 import scipy.stats as scistat
+from pprint import pprint
 
 from structured_dpp.factor_tree import *
+from structured_dpp.semiring import Order2VectSemiring
 
 # Constants
 n_positions = 3
@@ -150,7 +152,7 @@ class TestBasicSDPP(TestCase):
                                                             transition_factor1_2,
                                                             var_2, one_var_factor_2])
         self.assertTrue(
-            np.allclose(ftree_C, ftree2.calculate_C(run=CRun(1))),
+            np.allclose(ftree_C, ftree2.calculate_C(run_uid=1)),
             "SDPPFactorTree coming up with different result to ftree"
         )
 
@@ -196,4 +198,46 @@ class TestBasicSDPP(TestCase):
             ftree_C[0, 0],
             C00,
             msg="Theoretical and calculated value of C[0, 0] don't match"
+        )
+
+    def test_sampling_run(self):
+        ftree = SDPPFactorTree.create_from_connected_nodes(create_basic_nodes())
+        ftree.calculate_C(20)
+
+        eigvals, eigvects = ftree.calculate_C_eigendecompositon()
+        selected_indices = [1, 2]
+        k = len(selected_indices)
+        selected_eigvects = eigvects[:, selected_indices]
+        selected_eigvects /= np.sqrt(eigvals[np.newaxis, selected_indices])
+
+        run = SamplingRun(selected_eigvects, 99)
+        ftree.run_forward_pass(run)
+        ftree.root.calculate_all_beliefs(run)
+
+        # Root outgoing messages on the sampling run 99 to None
+        probability_sum = 0
+        for p0 in [0, 1, 2]:
+            theoretical = sum(
+                ((p0 / n_positions) * scistat.norm.pdf((p0 - p1) / movement_scale)
+                 * scistat.norm.pdf((p2 - p1) / movement_scale))**2
+                *
+                (selected_eigvects.T @ (
+                    position_diversity_vectors[p0] + position_diversity_vectors[p1] + position_diversity_vectors[p2])
+                 )**2
+                for p1 in [0, 1, 2]
+                for p2 in [0, 1, 2]
+            )
+            calculated = ftree.root.outgoing_messages[run][None][p0]
+            probability_sum += np.sum(calculated.C)
+            self.assertTrue(
+                np.allclose(
+                    calculated.C,
+                    theoretical
+                ),
+                "SDPPTree calculated incorrect marginal probabilities"
+            )
+        self.assertAlmostEqual(
+            probability_sum / k,
+            1,
+            msg="Sum of probabilities from first sampling run was not 1"
         )

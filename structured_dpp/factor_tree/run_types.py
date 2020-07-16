@@ -12,6 +12,9 @@ class BaseRun:
     def __hash__(self):
         return hash((type(self), self.uid))
 
+    def __repr__(self):
+        return f'{type(self).__name__}:{self.uid}'
+
 
 class CRun(BaseRun):
     pass
@@ -25,4 +28,6 @@ class BaseFixedVarsRun(BaseRun):
 
 
 class SamplingRun(BaseFixedVarsRun):
-    pass
+    def __init__(self, eigvects, uid=None):
+        super(SamplingRun, self).__init__(uid)
+        self.eigvects = eigvects

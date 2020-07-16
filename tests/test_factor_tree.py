@@ -259,7 +259,6 @@ class TestFactorTree(TestCase):
             baby_factor,
             extra_var1.outgoing_messages[-7]
         )
-        print(extra_var1.outgoing_messages)
 
     def test_create_from_connected_nodes(self):
         # Tree nodes

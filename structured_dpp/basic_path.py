@@ -1,4 +1,4 @@
-from structured_dpp.factor_tree import FactorTree, SDPPFactor, Variable, convert_var_assignment
+from structured_dpp.factor_tree import SDPPFactorTree, SDPPFactor, Variable, convert_var_assignment
 import numpy as np
 import scipy.linalg as scila
 import scipy.stats as scistat
@@ -7,8 +7,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # Constants
-N_POSITIONS = 50
-N_VARIABLES = 50
+N_POSITIONS = 25
+N_VARIABLES = 25
 MOVEMENT_SCALE = 5
 POSSIBLE_POSITIONS = np.arange(N_POSITIONS)
 ZEROS_VECTOR = np.zeros(N_POSITIONS)
@@ -77,7 +77,7 @@ for i in range(1, N_VARIABLES):
                                 name=f'Fac{i}')
     nodes_created.extend((transition_factor, current_var, one_var_factor))
 
-ftree = FactorTree.create_from_connected_nodes(nodes_created)
+ftree = SDPPFactorTree.create_from_connected_nodes(nodes_created)
 
 if __name__ == '__main__':
     # Draw graph
@@ -85,5 +85,4 @@ if __name__ == '__main__':
     plt.figure(figsize=(13, 13))
     ftree.visualise_graph()
     # Do forward pass
-    ftree.run_forward_pass()
-    C = root.calculate_sum_belief()[3]
+    C = ftree.calculate_C()

@@ -1,9 +1,9 @@
 import numpy as np
 
 from structured_dpp.factor_tree.factor import Factor
-from structured_dpp.semiring import Order2VectSemiring
+from structured_dpp.semiring import Order2MatrixSemiring, Order2VectSemiring
 
-from .run_types import C_RUN, CRun
+from .run_types import C_RUN, CRun, SamplingRun
 
 
 class SDPPFactor(Factor):
@@ -29,18 +29,26 @@ class SDPPFactor(Factor):
         self.get_diversity_matrix = get_diversity_matrix
 
     def default_weight(self, assignments):
-        q = self.get_quality(assignments)**2
+        p = self.get_quality(assignments)**2  # p = q**2, and that took me too long to realise
         dv = self.get_diversity(assignments)
         if self.get_diversity_matrix:
             dvm = self.get_diversity_matrix(assignments)
         else:
             dvm = np.outer(dv, dv)
-        return Order2VectSemiring(q, q*dv, q*dv, q*dvm)
+        return Order2MatrixSemiring(p, p * dv, p * dv, p * dvm)
+
+    def sampling_weight(self, assignments, run: SamplingRun):
+        p = self.get_quality(assignments)**2
+        dv = self.get_diversity(assignments)
+        phi = run.eigvects.T @ dv
+        return Order2VectSemiring(p, p * phi, p * phi, p * phi ** 2)
 
     def get_weight(self, assignments, run=C_RUN):
         if run is None:
             raise ValueError('When running an SDPP factor run you must choose a valid run type.')
         if isinstance(run, CRun):
             return self.default_weight(assignments)
+        elif isinstance(run, SamplingRun):
+            return self.sampling_weight(assignments, run)
         else:
             raise ValueError('When running an SDPP factor run you must choose a valid run type.')

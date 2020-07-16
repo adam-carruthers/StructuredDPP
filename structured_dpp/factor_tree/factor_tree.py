@@ -48,9 +48,19 @@ class FactorTree:
         else:
             self.levels[parent_level + 1].update(children)
 
+    def get_nodes(self):
+        """Iterates through the nodes in the FactorTree"""
+        yield from self.item_directory.keys()
+
+    def get_variables(self):
+        """Iterates through the variables in the FactorTree"""
+        for node in self.get_nodes():
+            if isinstance(node, Variable):
+                yield node
+
     def get_factors(self):
         """Iterates through the factors in the FactorTree"""
-        for node in self.item_directory.keys():
+        for node in self.get_nodes():
             if isinstance(node, Factor):
                 yield node
 
@@ -67,12 +77,12 @@ class FactorTree:
 
     def run_forward_pass(self, run=None):
         for level in reversed(range(1, len(self.levels))):
-            logger.info(f'Forward pass level {level}')
+            logger.info(f'Forward pass level {level} on run {run}')
             self.generate_up_messages_on_level(level, run=run)
 
     def run_backward_pass(self, run=None):
         for level in range(len(self.levels)):
-            logger.info(f'Backward pass level {level}')
+            logger.info(f'Backward pass level {level} on run {run}')
             self.generate_down_messages_on_level(level, run=run)
 
     def nodes_to_add_based_on_parents(self, nodes):
@@ -86,7 +96,7 @@ class FactorTree:
     def create_from_connected_nodes(cls, nodes):
         """
         Takes nodes already connected in a tree structure and creates a FactorTree of them
-        :param list nodes: The nodes which must be already connected through the parent attribute.
+        :param nodes: The nodes which must be already connected through the parent attribute.
         The children attribute should be unset!
         :return: Created FactorTree
         """
@@ -136,7 +146,7 @@ class FactorTree:
         import networkx as nx
 
         G = nx.DiGraph()
-        for node in self.item_directory.keys():
+        for node in self.get_nodes():
             if len(node.children) == 0:
                 continue
             G.add_edges_from([(node, child) for child in node.children])
