@@ -1,6 +1,6 @@
 from unittest.case import TestCase
 
-from structured_dpp.factor_tree import Variable, Factor
+from structured_dpp.factor_tree import *
 from structured_dpp.factor_tree.node import Node
 
 
@@ -122,11 +122,13 @@ class TestFactor(TestCase):
         )
 
     def test_create_message(self):
-        def get_weight1(assignment):
-            return next(iter(assignment.values())) ** 2
+        @assignment_to_var_arguments
+        def get_weight1(val):
+            return val ** 2
 
-        def get_weight2(assignment):
-            return sum(value for value in assignment.values())
+        @assignment_to_var_arguments
+        def get_weight2(*values):
+            return sum(values)
 
         parent = Variable(allowed_values=[0, 1, 2, 3], name='ParentVar')
         childless_factor = Factor(get_weight=get_weight1, parent=parent)

@@ -76,13 +76,15 @@ class FactorTree:
                 node.create_all_messages_to(child_node, run=run)
 
     def run_forward_pass(self, run=None):
+        logger.info(f'Starting forward pass on run {run}')
         for level in reversed(range(1, len(self.levels))):
-            logger.info(f'Forward pass level {level} on run {run}')
+            logger.debug(f'Forward pass level {level} on run {run}')
             self.generate_up_messages_on_level(level, run=run)
 
     def run_backward_pass(self, run=None):
+        logger.info(f'Starting backward pass on run {run}')
         for level in range(len(self.levels)):
-            logger.info(f'Backward pass level {level} on run {run}')
+            logger.debug(f'Backward pass level {level} on run {run}')
             self.generate_down_messages_on_level(level, run=run)
 
     def nodes_to_add_based_on_parents(self, nodes):
@@ -174,4 +176,3 @@ class FactorTree:
             labels={node: node.name for node in pos.keys()}
         )
         nx.draw_networkx_edges(G, pos)
-        plt.show()

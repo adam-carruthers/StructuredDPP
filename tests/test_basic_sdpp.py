@@ -61,34 +61,34 @@ zeros_matrix = np.zeros((n_positions, n_positions))
 
 
 # Specify the quality and diversity factors for the SDPP
-def quality_one(assignment):
+def quality_one(*args):
     return 1
 
 
-@convert_var_assignment
+@assignment_to_var_arguments
 def one_var_diversity(pos):
     return position_diversity_vectors[pos]
 
 
-@convert_var_assignment
+@assignment_to_var_arguments
 def one_var_diversity_matrix(pos):
     return position_diversity_matrices[pos]
 
 
-@convert_var_assignment
+@assignment_to_var_arguments
 def transition_quality(pos1, pos2):
     return scistat.norm.pdf((pos1 - pos2) / movement_scale)
 
 
-def zero_diversity(assignment):
+def zero_diversity(*args):
     return zeros_vector
 
 
-def zero_diversity_matrix(assignment):
+def zero_diversity_matrix(*args):
     return zeros_matrix
 
 
-@convert_var_assignment
+@assignment_to_var_arguments
 def root_var_quality(pos):
     return pos / n_positions
 
@@ -200,7 +200,7 @@ class TestBasicSDPP(TestCase):
             msg="Theoretical and calculated value of C[0, 0] don't match"
         )
 
-    def test_sampling_run(self):
+    def test_sampling_forward_pass(self):
         ftree = SDPPFactorTree.create_from_connected_nodes(create_basic_nodes())
         ftree.calculate_C(20)
 
@@ -241,3 +241,8 @@ class TestBasicSDPP(TestCase):
             1,
             msg="Sum of probabilities from first sampling run was not 1"
         )
+
+    def test_sampling_run(self):
+        ftree = SDPPFactorTree.create_from_connected_nodes(create_basic_nodes())
+        ftree.calculate_C()
+        ftree.sample_from_SDPP()

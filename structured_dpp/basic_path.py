@@ -1,4 +1,4 @@
-from structured_dpp.factor_tree import SDPPFactorTree, SDPPFactor, Variable, convert_var_assignment
+from structured_dpp.factor_tree import SDPPFactorTree, SDPPFactor, Variable, assignment_to_var_arguments
 import numpy as np
 import scipy.linalg as scila
 import scipy.stats as scistat
@@ -7,9 +7,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # Constants
-N_POSITIONS = 25
+N_POSITIONS = 50
 N_VARIABLES = 25
-MOVEMENT_SCALE = 5
+MOVEMENT_SCALE = 3
 POSSIBLE_POSITIONS = np.arange(N_POSITIONS)
 ZEROS_VECTOR = np.zeros(N_POSITIONS)
 ZEROS_MATRIX = np.zeros((N_POSITIONS, N_POSITIONS))
@@ -26,30 +26,34 @@ POSITION_DIVERSITY_MATRICES = {pos: np.outer(POSITION_DIVERSITY_VECTORS[pos], PO
 
 
 # Specify the quality and diversity factors for the SDPP
-def quality_one(assignment):
+def quality_one(*args):
     return 1
 
-@convert_var_assignment
+@assignment_to_var_arguments
 def one_var_diversity(pos):
     return POSITION_DIVERSITY_VECTORS[pos]
 
-@convert_var_assignment
+@assignment_to_var_arguments
 def one_var_diversity_matrix(pos):
     return POSITION_DIVERSITY_MATRICES[pos]
 
-@convert_var_assignment
+@assignment_to_var_arguments
 def transition_quality(pos1, pos2):
     return scistat.norm.pdf((pos1 - pos2) / MOVEMENT_SCALE)
 
-def zero_diversity(assignment):
+def zero_diversity(*args):
     return ZEROS_VECTOR
 
-def zero_diversity_matrix(assignment):
+def zero_diversity_matrix(*args):
     return ZEROS_MATRIX
 
-@convert_var_assignment
+@assignment_to_var_arguments
 def root_var_quality(pos):
-    return pos/N_POSITIONS
+    return 20*(pos/N_POSITIONS)**2
+
+@assignment_to_var_arguments
+def final_var_quality(pos):
+    return 1 if (15 <= pos <= 20) or (40 <= pos <= 50) else 0
 
 
 # Now create the nodes
@@ -63,7 +67,7 @@ factor_for_root = SDPPFactor(get_quality=root_var_quality,
 # Then create the rest in a chain
 current_var = root
 nodes_created = [root, factor_for_root]
-for i in range(1, N_VARIABLES):
+for i in range(1, N_VARIABLES-1):
     transition_factor = SDPPFactor(get_quality=transition_quality,
                                    get_diversity=zero_diversity,
                                    get_diversity_matrix=zero_diversity_matrix,
@@ -76,6 +80,19 @@ for i in range(1, N_VARIABLES):
                                 parent=current_var,
                                 name=f'Fac{i}')
     nodes_created.extend((transition_factor, current_var, one_var_factor))
+i += 1
+transition_factor = SDPPFactor(get_quality=transition_quality,
+                               get_diversity=zero_diversity,
+                               get_diversity_matrix=zero_diversity_matrix,
+                               parent=current_var,
+                               name=f'Fac{i-1}-{i}')
+current_var = Variable(POSSIBLE_POSITIONS, parent=transition_factor, name=f'Var{i}')
+one_var_factor = SDPPFactor(get_quality=final_var_quality,
+                            get_diversity=one_var_diversity,
+                            get_diversity_matrix=one_var_diversity_matrix,
+                            parent=current_var,
+                            name=f'Fac{i}')
+nodes_created.extend((transition_factor, current_var, one_var_factor))
 
 ftree = SDPPFactorTree.create_from_connected_nodes(nodes_created)
 
@@ -84,5 +101,16 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     plt.figure(figsize=(13, 13))
     ftree.visualise_graph()
+    plt.show()
     # Do forward pass
     C = ftree.calculate_C()
+    assignments = ftree.sample_from_kSDPP(k=3)
+
+    # Plot it!
+    x = np.arange(N_VARIABLES)
+    for i, assignment in enumerate(assignments):
+        y = [assignment[var] for var in ftree.get_variables()]
+        plt.plot(x, y, label=f'Item {i}')
+    plt.legend()
+    plt.title('DPP Selected Paths')
+    plt.show()

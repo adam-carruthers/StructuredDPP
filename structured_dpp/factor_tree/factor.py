@@ -1,7 +1,8 @@
 from functools import reduce
-from typing import Optional
+from types import MethodType
 
-from structured_dpp.factor_tree.node import Node
+from .node import Node
+from .run_types import SamplingRun
 
 
 class Factor(Node):
@@ -13,17 +14,17 @@ class Factor(Node):
     """
     def __init__(self, get_weight, parent=None, children=None, name=None):
         """
-        :param function get_weight: A function that takes in a dictionary of variables with assignments and returns the
-        weight.
+        :param function get_weight:
+            A function that takes the factor and a dictionary of variables with assignments and returns the weight.
         """
         super(Factor, self).__init__(parent, children, name=name if name else 'Factor')
-        self._get_weight = get_weight
+        self._get_weight = MethodType(get_weight, self)
 
     def get_weight(self, assignments, run=None):
         return self._get_weight(assignments)
 
     @staticmethod
-    def get_assignment_combinations(vars):
+    def get_assignment_combinations(vars, run=None):
         """
         Generator to yield all possible assignment to the variables in vars, based on their allowed_values.
         :param vars: The variable nodes that can be assigned to.
@@ -32,12 +33,20 @@ class Factor(Node):
         if len(vars) == 0:
             raise Exception('Subassignment function must be given at least one variable to assign.')
         if len(vars) == 1:
-            yield from ({vars[0]: value} for value in vars[0].allowed_values)
+            if isinstance(run, SamplingRun) and vars[0] in run.fixed_vars:
+                yield {vars[0]: run.fixed_vars[vars[0]]}
+            else:
+                yield from ({vars[0]: value} for value in vars[0].allowed_values)
         else:
-            for value in vars[0].allowed_values:
-                yield from ({vars[0]: value, **subassignment} for subassignment in Factor.get_assignment_combinations(vars[1:]))
+            if isinstance(run, SamplingRun) and vars[0] in run.fixed_vars:
+                yield from ({vars[0]: run.fixed_vars[vars[0]], **subassignment}
+                            for subassignment in Factor.get_assignment_combinations(vars[1:]))
+            else:
+                for value in vars[0].allowed_values:
+                    yield from ({vars[0]: value, **subassignment}
+                                for subassignment in Factor.get_assignment_combinations(vars[1:]))
 
-    def get_consistent_assignments(self, var, value):
+    def get_consistent_assignments(self, var, value, run=None):
         """
         Generator to yield all assignment combinations relating to the factor consistent with var=value
         :yields: A possible assignment combination for each variable.
@@ -46,7 +55,8 @@ class Factor(Node):
         if len(other_vars) == 0:
             yield {var: value}
             return
-        yield from ({var: value, **subassignment} for subassignment in self.get_assignment_combinations(other_vars))
+        yield from ({var: value, **subassignment}
+                    for subassignment in self.get_assignment_combinations(other_vars, run=run))
 
     def get_incoming_messages_for_assignment(self, assignment, exclude=None, run=None):
         """

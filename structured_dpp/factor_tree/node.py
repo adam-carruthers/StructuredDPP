@@ -103,11 +103,13 @@ class Node:
         raise NotImplementedError()
 
     def create_and_save_message(self, to, value, run=None):
-        message = self.create_message(run, to, value)
-        if self.outgoing_messages.get(to, None):
-            self.outgoing_messages[run][to][value] = message
-        else:
+        message = self.create_message(to, value, run)
+        if self.outgoing_messages.get(run, None) is None:
+            self.outgoing_messages[run] = {to: {value: message}}
+        elif self.outgoing_messages[run].get(to, None) is None:
             self.outgoing_messages[run][to] = {value: message}
+        else:
+            self.outgoing_messages[run][to][value] = message
         return message
 
     def create_all_messages_to(self, to, run=None):

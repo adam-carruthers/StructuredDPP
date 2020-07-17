@@ -1,7 +1,6 @@
 from functools import reduce
 
 from .node import Node
-from .run_types import BaseFixedVarsRun
 
 
 class Variable(Node):
@@ -31,8 +30,6 @@ class Variable(Node):
             raise KeyError(f"{var} didn't have message to {self} with value {value} on run {run}")
 
     def create_message(self, to, value, run=None):
-        if run and isinstance(run, BaseFixedVarsRun) and self in run.fixed_vars:
-            return 1 if value == run.fixed_vars[self] else 0
         incoming_messages = list(self.get_incoming_messages_for_value(value, exclude=to, run=run))
         if incoming_messages:
             return reduce(
@@ -51,14 +48,29 @@ class Variable(Node):
         self.outgoing_messages[run][to] = new_messages
         return new_messages
 
-    def calculate_belief(self, value, run=None):
+    def create_all_messages_when_set(self, set_value, run, exclude=None):
+        # Set the outgoing messages when the variable has been set to a particular value by the run
+        # All messages where this variable is not set_value are zero
+        # Other messages are as normal, however I increase p to reduce roundoff error
+        # But I'm not sure if this is okay...
+        # It's equivalent to setting a very high quality for this variable having that particular value I think?
+        self.outgoing_messages[run] = {
+            to: {value: self.create_message(to, value, run)._replace(p=1)  # Set p to 1 to prevent rounding errors
+                 if value == set_value else 0
+                 for value in self.allowed_values}
+            for to in self.get_connected_nodes()
+            if to != exclude
+        }
+        return self.outgoing_messages[run]
+
+    def calculate_belief(self, value, run=None):  # TODO: Don't store beliefs in outgoing_messages[run][None]
         """
         Calculates the product of all incoming messages associated with a value
         :param value: The value that the messages being producted are associated to.
         :param run:
         :return: The value of the belief
         """
-        return self.create_and_save_message(None, value, run=run)
+        return self.create_and_save_message(None, value, run)
 
     def calculate_all_beliefs(self, run=None):
         """
@@ -81,3 +93,6 @@ class Variable(Node):
         if recalculate or None not in self.outgoing_messages:
             self.calculate_all_beliefs(run=run)
         return sum(self.outgoing_messages[run][None].values())
+
+    def get_belief(self, value, run=None):
+        return self.outgoing_messages[run][None][value]

@@ -2,6 +2,25 @@ from unittest import TestCase
 from structured_dpp.factor_tree import *
 
 
+@assignment_to_var_arguments
+def get_weight1(*values):
+    return sum(values)
+
+
+@assignment_to_var_arguments
+def get_weight2(*values):
+    return 2 * sum(values)
+
+
+@assignment_to_var_arguments
+def get_weight_3(val):
+    return {
+        0: 0,
+        1: 1,
+        2: 0.5
+    }[val]
+
+
 # noinspection DuplicatedCode
 class TestFactorTree(TestCase):
     def test_add_parent_edges(self):
@@ -32,20 +51,6 @@ class TestFactorTree(TestCase):
         )
 
     def test_generate_up_messages_on_level(self):
-        def get_weight1(assignment):
-            return sum(value for value in assignment.values())
-
-        def get_weight2(assignment):
-            return 2*sum(value for value in assignment.values())
-
-        def get_weight_3(assignment):
-            v = next(iter(assignment.values()))
-            return {
-                0: 0,
-                1: 1,
-                2: 0.5
-            }[v]
-
         # Define the nodes of the factor tree
         root_var = Variable(allowed_values=[0, 1, 2, 3], name='VarRoot')
         factor1 = Factor(get_weight=get_weight1, name='Factor1')
@@ -187,20 +192,6 @@ class TestFactorTree(TestCase):
         )
 
     def test_run_forward_backward_pass(self):
-        def get_weight1(assignment):
-            return sum(value for value in assignment.values())
-
-        def get_weight2(assignment):
-            return 2*sum(value for value in assignment.values())
-
-        def get_weight_3(assignment):
-            v = next(iter(assignment.values()))
-            return {
-                0: 0,
-                1: 1,
-                2: 0.5
-            }[v]
-
         # Define the nodes of the factor tree
         root_var = Variable(allowed_values=[0, 1, 2, 3], name='VarRoot')
         factor1 = Factor(get_weight=get_weight1, name='Factor1')

@@ -2,9 +2,9 @@ from .factor_tree import FactorTree
 from .factor import Factor
 from .sdpp_factor import SDPPFactor
 from .variable import Variable
-from .run_types import C_RUN, CRun, SamplingRun
+from .run_types import CRun, SamplingRun
 
-from structured_dpp.exact_sampling import dpp_eigvals_selector, k_dpp_eigvals_selector
+from structured_dpp.exact_sampling import dpp_eigvals_selector, k_dpp_eigvals_selector, check_random_state
 
 import numpy as np
 import scipy.linalg as scila
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class SDPPFactorTree(FactorTree):
-    def __init__(self, root_node):
+    def __init__(self, root_node: Variable):
         if not isinstance(root_node, Variable):
             raise ValueError('For an SDPPFactorTree your root node has to be a variable node.')
         super(SDPPFactorTree, self).__init__(root_node)
@@ -31,7 +31,7 @@ class SDPPFactorTree(FactorTree):
     def calculate_C(self, run_uid=None):
         run = CRun(run_uid)
         self.run_forward_pass(run=run)
-        self.C = self.root.calculate_sum_belief(run=run)[3]
+        self.C = self.root.calculate_sum_belief(run=run).C
         return self.C
 
     def calculate_C_eigendecompositon(self, recalculate=False, err=False):
@@ -72,7 +72,7 @@ class SDPPFactorTree(FactorTree):
         selected_indices = sampler(eigvals, random_state)
         V_hat_eigvects = eigvects[:, selected_indices] / np.sqrt(eigvals[np.newaxis, selected_indices])
         logger.info(f'Selected {V_hat_eigvects.shape[1]} eigenvectors')
-        self.run_sample_from_V_hat(V_hat_eigvects=V_hat_eigvects, run_uid=run_uid, random_state=random_state)
+        return self.run_sample_from_V_hat(V_hat_eigvects=V_hat_eigvects, run_uid=run_uid, random_state=random_state)
 
     def sample_from_SDPP(self, calc_C_eigdec=True, run_uid=None, random_state=None):
         """
@@ -97,7 +97,7 @@ class SDPPFactorTree(FactorTree):
         :return:
         """
         return self.sample_eigenvectors_using_sampler(
-            sampler=lambda eigvals, k: k_dpp_eigvals_selector(eigvals, k, random_state=random_state),
+            sampler=lambda eigvals, rand_state: k_dpp_eigvals_selector(eigvals, k, random_state=rand_state),
             calc_C_eigdec=calc_C_eigdec, run_uid=run_uid, random_state=random_state)
 
     def run_sample_from_V_hat(self, V_hat_eigvects, run_uid=None, random_state=None):
@@ -109,6 +109,81 @@ class SDPPFactorTree(FactorTree):
         :param random_state:
         :return: Sample from the SDPP
         """
-        run = SamplingRun(V_hat_eigvects, run_uid)
-        self.run_forward_pass(run)
-        self.root.calculate_all_beliefs(run)
+        rnd = check_random_state(random_state)
+
+        assignments = []
+        for k in range(V_hat_eigvects.shape[1], 0, -1):
+            # Do a sampling run which will return one sample from the SDPP
+            run = SamplingRun(V_hat_eigvects, (run_uid, k))
+            self.run_forward_pass(run)
+            logger.info('Starting recursive sampling')
+            self.recursively_sample_items(self.root, rnd, run)
+            logger.info(f'Selected item {k}')
+            assignments.append(run.fixed_vars)
+
+            if k == 1:
+                # We're done!
+                return assignments
+
+            Bi = sum(  # This is the feature vector of our new point
+                factor.get_diversity(run.fixed_vars)
+                for factor in self.get_factors()
+            )
+
+            # Now we need to make V_hat orthogonal to Bi
+            # First choose an eigenvector to remove
+            # It needs length in the direction of Bi > 0
+            Bi_dot = V_hat_eigvects.T @ Bi  # Measure how much the eigenvectors are in the direction of the chosen vect.
+            index_to_remove = np.argmax(np.abs(Bi_dot))
+            eigvect_to_remove = V_hat_eigvects[:, index_to_remove]
+            length_of_removed = Bi_dot[index_to_remove]
+            if abs(length_of_removed) < 1e-2:
+                raise RuntimeError('Could not find eigenvector to remove after selection made')
+
+            # Remove Bi from the eigenvectors
+            V_hat_eigvects = V_hat_eigvects - (Bi_dot[np.newaxis, :]/length_of_removed)*eigvect_to_remove[:, np.newaxis]
+            assert np.allclose(V_hat_eigvects[:, index_to_remove], 0), \
+                "The removed eigenvector should be about zero after the step above."
+            V_hat_eigvects = np.delete(V_hat_eigvects, index_to_remove, 1)
+
+            # Orthonormalise the eigenvectors with respect to a non-standard dot product
+            # Use Gram-Schmidt
+            new_V_hat = []
+            for i, eigvect in enumerate(V_hat_eigvects.T):
+                eigvect_to_append = eigvect[:, np.newaxis]  # Eigenvector as a column vector
+                for orthonormed_eigvect in new_V_hat:
+                    eigvect_to_append -= (eigvect.T @ self.C @ orthonormed_eigvect) * orthonormed_eigvect
+                eigvect_to_append /= np.sqrt(eigvect_to_append.T @ self.C @ eigvect_to_append)
+                new_V_hat.append(eigvect_to_append)
+
+            V_hat_eigvects = np.array(new_V_hat)[:, :, 0].T
+            assert V_hat_eigvects.shape[1] == k - 1
+
+    def recursively_sample_items(self, var: Variable, rnd, run: SamplingRun):
+        item_select_thresh_prob = rnd.rand()
+        item_select_cuml_prob = 0
+        item_strengths = {
+            item: np.sum(belief.C)
+            for item, belief in var.calculate_all_beliefs(run).items()
+        }
+        strength_total = sum(item_strengths.values())
+        logger.debug(f'Strength total {strength_total}')
+        for val, strength in item_strengths.items():
+            item_select_cuml_prob += strength/strength_total
+            if item_select_thresh_prob < item_select_cuml_prob:
+                selected_item = val
+                break
+        else:
+            raise RuntimeError(f'The SDPP tried to select an item in variable {var} level {self.item_directory[var]}. '
+                               f'The probability of selecting one item should be one. '
+                               f'However the calculated cumulative probability was {item_select_cuml_prob}.')
+        logger.debug(f'Selected {selected_item} for {var} (p={item_select_cuml_prob})')
+
+        run.fixed_vars[var] = selected_item
+        var.create_all_messages_when_set(selected_item, run, exclude=var.parent)
+
+        child_factor: SDPPFactor
+        for child_factor in var.children:
+            for grandchild_var in child_factor.children:
+                child_factor.create_all_messages_to(grandchild_var, run)
+                self.recursively_sample_items(grandchild_var, rnd, run)
