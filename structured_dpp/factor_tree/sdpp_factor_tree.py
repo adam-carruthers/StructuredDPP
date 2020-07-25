@@ -2,7 +2,7 @@ from .factor_tree import FactorTree
 from .factor import Factor
 from .sdpp_factor import SDPPFactor
 from .variable import Variable
-from .run_types import CRun, SamplingRun
+from .run_types import CRun, SamplingRun, QualityOnlySamplingRun, BaseFixedVarsRun
 
 from structured_dpp.exact_sampling import dpp_eigvals_selector, k_dpp_eigvals_selector, check_random_state
 
@@ -72,6 +72,8 @@ class SDPPFactorTree(FactorTree):
         selected_indices = sampler(eigvals, random_state)
         V_hat_eigvects = eigvects[:, selected_indices] / np.sqrt(eigvals[np.newaxis, selected_indices])
         logger.info(f'Selected {V_hat_eigvects.shape[1]} eigenvectors')
+        if V_hat_eigvects.shape[1] == 0:
+            return {}
         return self.run_sample_from_V_hat(V_hat_eigvects=V_hat_eigvects, run_uid=run_uid, random_state=random_state)
 
     def sample_from_SDPP(self, calc_C_eigdec=True, run_uid=None, random_state=None):
@@ -99,6 +101,21 @@ class SDPPFactorTree(FactorTree):
         return self.sample_eigenvectors_using_sampler(
             sampler=lambda eigvals, rand_state: k_dpp_eigvals_selector(eigvals, k, random_state=rand_state),
             calc_C_eigdec=calc_C_eigdec, run_uid=run_uid, random_state=random_state)
+
+    def sample_quality_only(self, k, run_uid=None, random_state=None):
+        rnd = check_random_state(random_state)
+
+        assigments = []
+        run = QualityOnlySamplingRun(run_uid)
+        self.run_forward_pass(run)
+        for i in range(k):
+            logger.info('Starting recursive sampling')
+            self.recursively_sample_items(self.root, rnd, run, quality_only=True)
+            logger.info(f'Selected item {i}')
+            assigments.append(run.fixed_vars)
+            run.fixed_vars = {}
+
+        return assigments
 
     def run_sample_from_V_hat(self, V_hat_eigvects, run_uid=None, random_state=None):
         """
@@ -159,11 +176,11 @@ class SDPPFactorTree(FactorTree):
             V_hat_eigvects = np.array(new_V_hat)[:, :, 0].T
             assert V_hat_eigvects.shape[1] == k - 1
 
-    def recursively_sample_items(self, var: Variable, rnd, run: SamplingRun):
+    def recursively_sample_items(self, var: Variable, rnd, run: BaseFixedVarsRun, quality_only=False):
         item_select_thresh_prob = rnd.rand()
         item_select_cuml_prob = 0
         item_strengths = {
-            item: np.sum(belief.C)
+            item: belief if quality_only else np.sum(belief.C)
             for item, belief in var.calculate_all_beliefs(run).items()
         }
         strength_total = sum(item_strengths.values())
@@ -186,4 +203,4 @@ class SDPPFactorTree(FactorTree):
         for child_factor in var.children:
             for grandchild_var in child_factor.children:
                 child_factor.create_all_messages_to(grandchild_var, run)
-                self.recursively_sample_items(grandchild_var, rnd, run)
+                self.recursively_sample_items(grandchild_var, rnd, run, quality_only)

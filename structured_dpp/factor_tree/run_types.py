@@ -31,3 +31,8 @@ class SamplingRun(BaseFixedVarsRun):
     def __init__(self, eigvects, uid=None):
         super(SamplingRun, self).__init__(uid)
         self.eigvects = eigvects
+
+
+class QualityOnlySamplingRun(BaseFixedVarsRun):
+    def __init__(self, uid=None):
+        super(QualityOnlySamplingRun, self).__init__(uid)

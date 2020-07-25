@@ -3,10 +3,8 @@ from unittest.case import TestCase
 import numpy as np
 import scipy.linalg as scila
 import scipy.stats as scistat
-from pprint import pprint
 
 from structured_dpp.factor_tree import *
-from structured_dpp.semiring import Order2VectSemiring
 
 # Constants
 n_positions = 3
@@ -246,3 +244,4 @@ class TestBasicSDPP(TestCase):
         ftree = SDPPFactorTree.create_from_connected_nodes(create_basic_nodes())
         ftree.calculate_C()
         ftree.sample_from_SDPP()
+        ftree.sample_from_kSDPP(k=2)

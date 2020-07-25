@@ -4,7 +4,7 @@ from types import MethodType
 from structured_dpp.factor_tree.factor import Factor
 from structured_dpp.semiring import Order2MatrixSemiring, Order2VectSemiring
 
-from .run_types import C_RUN, CRun, SamplingRun
+from .run_types import C_RUN, CRun, SamplingRun, QualityOnlySamplingRun
 
 
 class SDPPFactor(Factor):
@@ -37,6 +37,8 @@ class SDPPFactor(Factor):
 
     def default_weight(self, assignments):
         p = self.get_quality(assignments)**2  # p = q**2, and that took me too long to realise
+        if p == 0:
+            return 0
         dv = self.get_diversity(assignments)
         if self.get_diversity_matrix:
             dvm = self.get_diversity_matrix(assignments)
@@ -46,6 +48,8 @@ class SDPPFactor(Factor):
 
     def sampling_weight(self, assignments, run: SamplingRun):
         p = self.get_quality(assignments)**2
+        if p == 0:
+            return 0
         dv = self.get_diversity(assignments)
         phi = run.eigvects.T @ dv
         return Order2VectSemiring(p, p * phi, p * phi, p * phi ** 2)
@@ -57,5 +61,7 @@ class SDPPFactor(Factor):
             return self.default_weight(assignments)
         elif isinstance(run, SamplingRun):
             return self.sampling_weight(assignments, run)
+        elif isinstance(run, QualityOnlySamplingRun):
+            return self.get_quality(assignments)**2
         else:
             raise ValueError('When running an SDPP factor run you must choose a valid run type.')
