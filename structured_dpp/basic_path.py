@@ -10,6 +10,7 @@ logging.basicConfig(level=logging.INFO)
 N_POSITIONS = 50
 N_VARIABLES = 50
 MOVEMENT_SCALE = 1
+DIVERSITY_SCALE = 5
 POSSIBLE_POSITIONS = np.arange(N_POSITIONS)
 ZEROS_VECTOR = np.zeros(N_POSITIONS)
 ZEROS_MATRIX = np.zeros((N_POSITIONS, N_POSITIONS))
@@ -18,7 +19,7 @@ ZEROS_MATRIX = np.zeros((N_POSITIONS, N_POSITIONS))
 # Precalculate diversity vectors and matrices for transitions
 def position_diversity_vector(pos):
     distance = POSSIBLE_POSITIONS - pos
-    unnormed = np.exp(-distance**2)
+    unnormed = np.exp(-distance**2/5)
     return unnormed/scila.norm(unnormed)
 POSITION_DIVERSITY_VECTORS = {pos: position_diversity_vector(pos) for pos in POSSIBLE_POSITIONS}
 POSITION_DIVERSITY_MATRICES = {pos: np.outer(POSITION_DIVERSITY_VECTORS[pos], POSITION_DIVERSITY_VECTORS[pos])
@@ -49,7 +50,7 @@ def zero_diversity_matrix(*args):
 
 @assignment_to_var_arguments
 def root_var_quality(pos):
-    return pos/N_POSITIONS
+    return (pos/N_POSITIONS)**2
 
 @assignment_to_var_arguments
 def final_var_quality(pos):
@@ -97,18 +98,37 @@ for i in range(1, N_VARIABLES):
 ftree = SDPPFactorTree.create_from_connected_nodes(nodes_created)
 
 if __name__ == '__main__':
-    # Draw graph
     import matplotlib.pyplot as plt
-    # plt.figure(figsize=(13, 13))
-    # ftree.visualise_graph()
-    # plt.show()
+
+    # Visualise the factor tree
+    plt.figure(figsize=(13, 13))
+    ftree.visualise_graph()
+    plt.show()
+    ftree.visualise_graph()
+    plt.show()
+    ftree.visualise_graph()
+    plt.show()
+
     # Do forward pass
-    # C = ftree.calculate_C()
-    assignments = ftree.sample_quality_only(k=5)
+    C = ftree.calculate_C()
+
+    # Sample SDPP
+    assignments = ftree.sample_from_kSDPP(k=5)
 
     # Plot it!
     x = np.arange(N_VARIABLES)
     for i, assignment in enumerate(assignments):
+        y = [assignment[var] for var in ftree.get_variables()]
+        plt.plot(x, y, label=f'Item {i}')
+    plt.legend()
+    plt.title('DPP Selected Paths')
+    plt.show()
+
+    # Sample MRF
+    assignments_q = ftree.sample_quality_only(k=5)
+
+    # Plot it again
+    for i, assignment in enumerate(assignments_q):
         y = [assignment[var] for var in ftree.get_variables()]
         plt.plot(x, y, label=f'Item {i}')
     plt.legend()

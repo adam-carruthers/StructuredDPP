@@ -110,7 +110,7 @@ class SDPPFactorTree(FactorTree):
         self.run_forward_pass(run)
         for i in range(k):
             logger.info('Starting recursive sampling')
-            self.recursively_sample_items(self.root, rnd, run, quality_only=True)
+            self.backwards_sample_items(rnd, run, quality_only=True)
             logger.info(f'Selected item {i}')
             assigments.append(run.fixed_vars)
             run.fixed_vars = {}
@@ -134,7 +134,7 @@ class SDPPFactorTree(FactorTree):
             run = SamplingRun(V_hat_eigvects, (run_uid, k))
             self.run_forward_pass(run)
             logger.info('Starting recursive sampling')
-            self.recursively_sample_items(self.root, rnd, run)
+            self.backwards_sample_items(rnd, run)
             logger.info(f'Selected item {k}')
             assignments.append(run.fixed_vars)
 
@@ -176,31 +176,35 @@ class SDPPFactorTree(FactorTree):
             V_hat_eigvects = np.array(new_V_hat)[:, :, 0].T
             assert V_hat_eigvects.shape[1] == k - 1
 
-    def recursively_sample_items(self, var: Variable, rnd, run: BaseFixedVarsRun, quality_only=False):
-        item_select_thresh_prob = rnd.rand()
-        item_select_cuml_prob = 0
-        item_strengths = {
-            item: belief if quality_only else np.sum(belief.C)
-            for item, belief in var.calculate_all_beliefs(run).items()
-        }
-        strength_total = sum(item_strengths.values())
-        logger.debug(f'Strength total {strength_total}')
-        for val, strength in item_strengths.items():
-            item_select_cuml_prob += strength/strength_total
-            if item_select_thresh_prob < item_select_cuml_prob:
-                selected_item = val
-                break
-        else:
-            raise RuntimeError(f'The SDPP tried to select an item in variable {var} level {self.item_directory[var]}. '
-                               f'The probability of selecting one item should be one. '
-                               f'However the calculated cumulative probability was {item_select_cuml_prob}.')
-        logger.debug(f'Selected {selected_item} for {var} (p={item_select_cuml_prob})')
+    def backwards_sample_items(self, rnd, run: BaseFixedVarsRun, quality_only=False):
+        """
+        Sample items root downwards, after a sampling forwards pass has been run
+        """
+        for i in range(0, len(self.levels), 2):  # Selects every variable level
+            for var in self.levels[i]:
+                item_select_thresh_prob = rnd.rand()
+                item_select_cuml_prob = 0
+                item_strengths = {
+                    item: belief if quality_only else np.sum(belief.C)
+                    for item, belief in var.calculate_all_beliefs(run).items()
+                }
+                strength_total = sum(item_strengths.values())
+                logger.debug(f'Strength total {strength_total}')
+                for val, strength in item_strengths.items():
+                    item_select_cuml_prob += strength/strength_total
+                    if item_select_thresh_prob < item_select_cuml_prob:
+                        selected_item = val
+                        break
+                else:
+                    raise RuntimeError(f'The SDPP tried to select an item in variable {var} level {self.item_directory[var]}. '
+                                       f'The probability of selecting one item should be one. '
+                                       f'However the calculated cumulative probability was {item_select_cuml_prob}.')
+                logger.debug(f'Selected {selected_item} for {var} (p={item_select_cuml_prob})')
 
-        run.fixed_vars[var] = selected_item
-        var.create_all_messages_when_set(selected_item, run, exclude=var.parent)
+                run.fixed_vars[var] = selected_item
+                var.create_all_messages_when_set(selected_item, run, exclude=var.parent)
 
-        child_factor: SDPPFactor
-        for child_factor in var.children:
-            for grandchild_var in child_factor.children:
-                child_factor.create_all_messages_to(grandchild_var, run)
-                self.recursively_sample_items(grandchild_var, rnd, run, quality_only)
+                child_factor: SDPPFactor
+                for child_factor in var.children:
+                    for grandchild_var in child_factor.children:
+                        child_factor.create_all_messages_to(grandchild_var, run)

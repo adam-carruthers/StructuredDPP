@@ -64,7 +64,7 @@ class Variable(Node):
             }
         else:
             self.outgoing_messages[run] = {
-                to: {value: self.create_message(to, value, run)._replace(p=1)  # Set p to 1 to prevent rounding errors
+                to: {value: self.create_message(to, value, run)
                      if value == set_value else 0
                      for value in self.allowed_values}
                 for to in self.get_connected_nodes()
