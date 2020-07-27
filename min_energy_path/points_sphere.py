@@ -1,5 +1,7 @@
 import numpy as np
 import scipy.linalg as scila
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 
 def create_sphere_basis(minima):
@@ -40,8 +42,7 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
     minima_delta = minima[:, 1] - minima[:, 0]
     minima_distance = scila.norm(minima_delta)
     minima_direction = minima_delta / minima_distance
-    midpoint = (minima[:, 1] + minima[:, 0]) / 2
-    gap_distance = minima_distance/(n_spanning_gap - 1)
+    point_distance = minima_distance/(n_spanning_gap - 1)
     sphere_radius = minima_distance/(2*gap_proportion)
 
     # Calculate the total number of points, which is wider than the points spanning the gap
@@ -56,25 +57,33 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
     n_horizontal = np.ceil(n_total/2)
 
     # Where is the first point located?
-    first_point_pos = minima[:, 0] - minima_direction * gap_distance * n_overflow
+    first_point_pos = minima[:, 0] - minima_direction * point_distance * n_overflow
 
     # Create a grid
-    dir_component = np.arange(n_total)*gap_distance
-    other_component = np.arange(-n_horizontal, n_horizontal+1)*gap_distance
+    dir_component = np.arange(n_total)*point_distance
+    other_component = np.arange(-n_horizontal, n_horizontal+1)*point_distance
     other_components = np.tile(other_component, (dimensions-1, 1))
     grid_griddy = np.meshgrid(dir_component, *other_components)
     grid_flattened = np.array([component.flatten() for component in grid_griddy])  # This turns the grid into column vectors
 
     measurement_grid = grid_flattened.copy()
-    measurement_grid[0, :] -= sphere_radius
+    measurement_grid[0, :] -= np.max(dir_component)/2
     measurement_grid[1:, :] /= shrink_in_direction
     in_sphere = scila.norm(measurement_grid, axis=0) <= sphere_radius
     sphere_before = grid_flattened[:, in_sphere]
 
-    grid_basis = create_sphere_basis(minima)
-    sphere = first_point_pos[:, np.newaxis] + grid_basis @ sphere_before
+    basis = create_sphere_basis(minima)
+    sphere = first_point_pos[:, np.newaxis] + basis @ sphere_before
 
-    return sphere_before, sphere
+    return {'sphere_before': sphere_before,
+            'sphere': sphere,
+            'n_total': n_total,
+            'basis': basis,
+            'minima_distance': minima_distance,
+            'point_distance': point_distance,
+            'n_overflow': n_overflow,
+            'dir_component': dir_component
+            }
 
 
 def plot_minima_and_circle(minima, scatter_with, gap_proportion=0.7):
@@ -98,24 +107,21 @@ def plot_scatter_with_minima(scatter_points, minima, scatter_with, gap_proportio
 
 if __name__ == "__main__":
     # Plot a 2D grid with a number of different options
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
 
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    ax.set_xlim3d(-2, 2)
-    ax.set_ylim3d(-2, 2)
-    ax.set_zlim3d(-2, 2)
+    # fig = plt.figure()
+    # ax = fig.gca(projection='3d')
+    # ax.set_xlim3d(-2, 2)
+    # ax.set_ylim3d(-2, 2)
+    # ax.set_zlim3d(-2, 2)
 
     minima = np.array([
         [1, 0],
-        [0, 1],
-        [-1, 1.5]
+        [0, 1]
     ])
     gap_proportion = 0.7
-    sphere_untransformed, sphere_transformed = create_sphere_points(minima, 8, gap_proportion, 0.5)
+    sphere_untransformed, sphere_transformed = create_sphere_points(minima, 8, gap_proportion, 1)
 
-    plot_scatter_with_minima(sphere_transformed, minima, ax, gap_proportion)
+    plot_scatter_with_minima(sphere_transformed, minima, plt, gap_proportion)
 
 #     basis_3d = create_sphere_basis(np.array([
 #         [0, 0],
