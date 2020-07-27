@@ -7,8 +7,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # Constants
-N_POSITIONS = 50
-N_VARIABLES = 50
+N_POSITIONS = 25
+N_VARIABLES = 25
 MOVEMENT_SCALE = 1
 DIVERSITY_SCALE = 5
 POSSIBLE_POSITIONS = np.arange(N_POSITIONS)
@@ -97,42 +97,52 @@ for i in range(1, N_VARIABLES):
 
 ftree = SDPPFactorTree.create_from_connected_nodes(nodes_created)
 
+
+def plot_path_assignments(assignments, ftree, title, fname=None):
+    fig, axs = plt.subplots(1, len(assignments)+3, figsize=(10, 6), constrained_layout=False,
+                            gridspec_kw={'width_ratios': [0.5]+[7]+[1]*len(assignments)+[0.5], 'wspace': 0, 'left': 0, 'right': 1})
+    fig.suptitle(title)
+    axs[0].axis('off')
+    axs[-1].axis('off')
+
+    x = np.arange(N_VARIABLES)
+
+    for (i, assignment), col in zip(enumerate(assignments), 'bygrmkc'):
+        y = [assignment[var] for var in ftree.get_variables()]
+        axs[1].plot(x, y, c=col)
+        div = sum(  # This is the feature vector of our new point
+            factor.get_diversity(assignment)
+            for factor in ftree.get_factors()
+        )
+        axs[i+2].plot(div, range(len(div)), c=col)
+        axs[i+2].xaxis.set_visible(False)
+        axs[i+2].yaxis.set_visible(False)
+
+    for i in range(2, len(assignments)+2):
+        axs[i].set_ylim(axs[1].get_ylim())
+
+    fig.show()
+    if fname is not None:
+        fig.savefig(fname)
+    return fig
+
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     # Visualise the factor tree
-    plt.figure(figsize=(13, 13))
-    ftree.visualise_graph()
-    plt.show()
-    plt.figure(figsize=(13, 13))
-    ftree.visualise_graph()
-    plt.show()
-    plt.figure(figsize=(13, 13))
-    ftree.visualise_graph()
-    plt.show()
+    # plt.figure(figsize=(15, 15))
+    # ftree.visualise_graph()
+    # plt.show()
 
     # Do forward pass
     C = ftree.calculate_C()
 
-    # Sample SDPP
-    assignments = ftree.sample_from_kSDPP(k=5)
+    for i in range(1, 5):
+        # Sample SDPP
+        assignments = ftree.sample_from_kSDPP(k=5)
+        plot_path_assignments(assignments, ftree, f"kSDPP Selected Paths {i}", f'plots/SDPP{i}.png')
 
-    # Plot it!
-    x = np.arange(N_VARIABLES)
-    for i, assignment in enumerate(assignments):
-        y = [assignment[var] for var in ftree.get_variables()]
-        plt.plot(x, y, label=f'Item {i}')
-    plt.legend()
-    plt.title('DPP Selected Paths')
-    plt.show()
-
-    # Sample MRF
-    assignments_q = ftree.sample_quality_only(k=5)
-
-    # Plot it again
-    for i, assignment in enumerate(assignments_q):
-        y = [assignment[var] for var in ftree.get_variables()]
-        plt.plot(x, y, label=f'Item {i}')
-    plt.legend()
-    plt.title('Quality Selected Paths')
-    plt.show()
+        # Sample MRF
+        assignments_q = ftree.sample_quality_only(k=5)
+        plot_path_assignments(assignments_q, ftree, f"Quality Selected Paths {i}", f'plots/Quality{i}.png')

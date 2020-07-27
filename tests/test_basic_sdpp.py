@@ -162,12 +162,13 @@ class TestBasicSDPP(TestCase):
                      * scistat.norm.pdf((p2 - p1) / movement_scale)
             path_dv = position_diversity_vectors[p0] + position_diversity_vectors[p1] + position_diversity_vectors[p2]
             B_vectors.append(path_q * path_dv)
-            self.assertAlmostEqual(
-                path_q**2,
-                factor_for_root.get_weight({root: p0})[0] * transition_factor0_1.get_weight({root: p0, var_1: p1})[0]
-                * transition_factor1_2.get_weight({var_1: p1, var_2: p2})[0],
-                msg=f"The transition quality does not match for path ({p0} {p1} {p2})"
-            )
+            if path_q != 0:
+                self.assertAlmostEqual(
+                    path_q**2,
+                    factor_for_root.get_weight({root: p0})[0] * transition_factor0_1.get_weight({root: p0, var_1: p1})[0]
+                    * transition_factor1_2.get_weight({var_1: p1, var_2: p2})[0],
+                    msg=f"The transition quality does not match for path ({p0} {p1} {p2})"
+                )
             self.assertTrue(
                 np.all(
                     path_dv == (factor_for_root.get_diversity({root: p0})
