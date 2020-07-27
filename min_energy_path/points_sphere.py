@@ -21,7 +21,7 @@ def create_sphere_basis(minima):
     return np.concatenate((minima_direction[:, np.newaxis], basis), axis=1)
 
 
-def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7):
+def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_direction=1.0):
     """
     Creates the sphere of points between two minima
     :param minima:
@@ -30,6 +30,8 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7):
         The number of points between the two minima including the two minima
     :param gap_proportion:
         The proportion of the diameter of the sphere that is spanned by the two minima
+    :param shrink_in_direction:
+        The extent to which the sphere will be shrunk in all axis except the one in the direction of the minima
     :return:
     """
     # Useful quantities
@@ -60,15 +62,19 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7):
     dir_component = np.arange(n_total)*gap_distance
     other_component = np.arange(-n_horizontal, n_horizontal+1)*gap_distance
     other_components = np.tile(other_component, (dimensions-1, 1))
-    grid = np.meshgrid(dir_component, *other_components)
-    grid_flattened = np.array([component.flatten() for component in grid])  # This turns the grid into column vectors
+    grid_griddy = np.meshgrid(dir_component, *other_components)
+    grid_flattened = np.array([component.flatten() for component in grid_griddy])  # This turns the grid into column vectors
+
+    measurement_grid = grid_flattened.copy()
+    measurement_grid[0, :] -= sphere_radius
+    measurement_grid[1:, :] /= shrink_in_direction
+    in_sphere = scila.norm(measurement_grid, axis=0) <= sphere_radius
+    sphere_before = grid_flattened[:, in_sphere]
 
     grid_basis = create_sphere_basis(minima)
-    grid_transformed = first_point_pos[:, np.newaxis] + grid_basis @ grid_flattened
-    in_sphere = scila.norm(grid_transformed - midpoint[:, np.newaxis], axis=0) <= sphere_radius
-    sphere_untransformed = grid_flattened[:, in_sphere]
-    sphere_transformed = grid_transformed[:, in_sphere]
-    return sphere_untransformed, sphere_transformed
+    sphere = first_point_pos[:, np.newaxis] + grid_basis @ sphere_before
+
+    return sphere_before, sphere
 
 
 def plot_minima_and_circle(minima, scatter_with, gap_proportion=0.7):
@@ -97,14 +103,17 @@ if __name__ == "__main__":
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
+    ax.set_xlim3d(-2, 2)
+    ax.set_ylim3d(-2, 2)
+    ax.set_zlim3d(-2, 2)
 
     minima = np.array([
         [1, 0],
         [0, 1],
-        [0, 2]
+        [-1, 1.5]
     ])
-    gap_proportion = 0.5
-    sphere_untransformed, sphere_transformed = create_sphere_points(minima, 8, gap_proportion)
+    gap_proportion = 0.7
+    sphere_untransformed, sphere_transformed = create_sphere_points(minima, 8, gap_proportion, 0.5)
 
     plot_scatter_with_minima(sphere_transformed, minima, ax, gap_proportion)
 

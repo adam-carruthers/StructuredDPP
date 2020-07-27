@@ -104,8 +104,10 @@ if __name__ == '__main__':
     plt.figure(figsize=(13, 13))
     ftree.visualise_graph()
     plt.show()
+    plt.figure(figsize=(13, 13))
     ftree.visualise_graph()
     plt.show()
+    plt.figure(figsize=(13, 13))
     ftree.visualise_graph()
     plt.show()
 
