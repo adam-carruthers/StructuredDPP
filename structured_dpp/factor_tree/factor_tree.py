@@ -1,9 +1,10 @@
 from warnings import warn
 import logging
 
-from structured_dpp.factor_tree.factor import Factor
-from structured_dpp.factor_tree.node import Node
-from structured_dpp.factor_tree.variable import Variable
+from .factor import Factor
+from .node import Node
+from .variable import Variable
+from .run_types import MaxProductRun
 
 
 logger = logging.getLogger(__name__)
@@ -176,3 +177,46 @@ class FactorTree:
             labels={node: node.name for node in pos.keys()}
         )
         nx.draw_networkx_edges(G, pos)
+
+    def generate_depth_first_traversal(self, start_node: Node):
+        traversal = [(start_node, None)]  # TODO: Test this function
+        level_above = [(start_node, None)]
+        while True:
+            current_level = []
+            for parent_node, exclude in level_above:
+                current_level.extend((child_node, parent_node)
+                                     for child_node in parent_node.get_connected_nodes(exclude))
+            traversal.extend(current_level)
+            level_above = current_level
+            if len(current_level) == 0:
+                return traversal
+
+    def run_forward_pass_from_traversal(self, traversal, run=None):
+        node: Node
+        for node, node_above in reversed(traversal[1:]):
+            node.create_all_messages_to(node_above, run)
+
+    def run_backward_pass_from_traversal(self, traversal, run=None):
+        node: Node
+        node_above: Node
+        for node, node_above in traversal[1:]:
+            node_above.create_all_messages_to(node, run)
+
+    def get_max_quality(self, start_node=None, run_uid=None):
+        start_node = start_node if start_node else self.root
+        if not isinstance(start_node, Variable):
+            raise ValueError('Max quality runs must start from a Variable')
+
+        run = MaxProductRun(run_uid)
+        traversal = self.generate_depth_first_traversal(start_node=start_node)
+
+        self.run_forward_pass_from_traversal(traversal, run)
+        root_max_m, root_max_m_assignment = start_node.calculate_max_message_assignment(run)
+        logger.info(f'Max path has quality {root_max_m}, starting assigning')
+        assignments = {self.root: root_max_m_assignment}
+        for node, node_above in traversal[1:]:  # Selects factor levels only
+            if isinstance(node, Factor):
+                message = node.get_outgoing_message(node_above, assignments[node_above], run)
+                assignments.update(message.assignment)
+
+        return assignments
