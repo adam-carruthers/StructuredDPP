@@ -2,7 +2,7 @@ from .factor_tree import FactorTree
 from .factor import Factor
 from .sdpp_factor import SDPPFactor
 from .variable import Variable
-from .run_types import CRun, SamplingRun, QualityOnlySamplingRun, BaseFixedVarsRun
+from .run_types import CRun, SamplingRun, QualityOnlySamplingRun, BaseFixedVarsRun, MaxProductRun
 
 from structured_dpp.exact_sampling import dpp_eigvals_selector, k_dpp_eigvals_selector, check_random_state
 
@@ -208,3 +208,17 @@ class SDPPFactorTree(FactorTree):
                 for child_factor in var.children:
                     for grandchild_var in child_factor.children:
                         child_factor.create_all_messages_to(grandchild_var, run)
+
+    def get_max_quality(self, run_uid=None):
+        run = MaxProductRun(run_uid)
+
+        self.run_forward_pass(run)
+        root_max_m, root_max_m_assignment = self.root.calculate_max_message_assignment(run)
+        logger.info(f'Max path has quality {root_max_m}, starting assigning')
+        assignments = {self.root: root_max_m_assignment}
+        for i in range(1, len(self.levels), 2):  # Selects factor levels only
+            for factor in self.levels[i]:
+                message = factor.get_outgoing_message(factor.parent, assignments[factor.parent], run)
+                assignments.update(message.assignment)
+
+        return assignments

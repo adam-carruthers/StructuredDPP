@@ -4,7 +4,7 @@ from types import MethodType
 from structured_dpp.factor_tree.factor import Factor
 from structured_dpp.semiring import Order2MatrixSemiring, Order2VectSemiring
 
-from .run_types import C_RUN, CRun, SamplingRun, QualityOnlySamplingRun
+from .run_types import C_RUN, CRun, SamplingRun, QualityOnlySamplingRun, MaxProductRun
 
 
 class SDPPFactor(Factor):
@@ -61,7 +61,7 @@ class SDPPFactor(Factor):
             return self.default_weight(assignments)
         elif isinstance(run, SamplingRun):
             return self.sampling_weight(assignments, run)
-        elif isinstance(run, QualityOnlySamplingRun):
+        elif isinstance(run, QualityOnlySamplingRun) or isinstance(run, MaxProductRun):
             return self.get_quality(assignments)**2
         else:
             raise ValueError('When running an SDPP factor run you must choose a valid run type.')

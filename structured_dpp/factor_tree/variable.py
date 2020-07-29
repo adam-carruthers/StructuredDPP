@@ -1,7 +1,8 @@
 from functools import reduce
 
 from .node import Node
-from .run_types import QualityOnlySamplingRun
+from .run_types import QualityOnlySamplingRun, MaxProductRun
+from structured_dpp.semiring import MaxProductValue
 
 
 class Variable(Node):
@@ -105,3 +106,18 @@ class Variable(Node):
 
     def get_belief(self, value, run=None):
         return self.outgoing_messages[run][None][value]
+
+    def calculate_max_message_assignment(self, run):
+        if self.outgoing_messages.get(run, None) is None or self.outgoing_messages[run].get(None, None) is None:
+            self.calculate_all_beliefs(run)
+        max_m, max_m_assignment = -1, None
+        for val in self.allowed_values:
+            m = self.outgoing_messages[run][None][val]
+            if isinstance(m, MaxProductValue):
+                m = m.v
+            if m > max_m:
+                max_m = m
+                max_m_assignment = val
+        if max_m == -1:
+            raise ValueError('Max message assignment did not find a message bigger than -1!')
+        return max_m, max_m_assignment

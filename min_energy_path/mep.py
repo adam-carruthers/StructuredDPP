@@ -13,7 +13,7 @@ start_time = time.time()
 
 
 # First set up some constants we're going to need
-N_SPANNING_GAP = 15
+N_SPANNING_GAP = 10
 N_VARIABLES = N_SPANNING_GAP
 
 TUNING_STRENGTH = 1
@@ -104,7 +104,7 @@ for i in range(1, N_VARIABLES):
 
 ftree = SDPPFactorTree.create_from_connected_nodes(nodes_to_add)
 
-assignments = ftree.sample_quality_only(10)
+assignments = [ftree.get_max_quality()]
 
 
 print(f'Running time {time.time() - start_time}')

@@ -1,5 +1,6 @@
 import numpy as np
 from collections import namedtuple
+import numbers
 
 
 class Order2MatrixSemiring(namedtuple('Order2MatrixSemiring', ['p', 'phi', 'psi', 'C'])):
@@ -157,3 +158,27 @@ class Order2VectSemiring(namedtuple('Order2VectSemiring', ['p', 'phi', 'psi', 'C
         if self.p in (0, 1) and np.all(self.phi == 0) and np.all(self.psi == 0) and np.all(self.C == 0):
             return self.p
         return super(Order2VectSemiring, self).__hash__()
+
+
+class MaxProductValue:
+    """
+    Message stores max as well as assignment that causes max.
+    As soon as it is multiplied it turns into an int.
+    """
+
+    def __init__(self, value, assignment):
+        self.v = value
+        self.assignment = assignment
+
+    def __mul__(self, other):
+        if isinstance(other, MaxProductValue):
+            return self.v * other.v
+        elif isinstance(other, numbers.Number):
+            return self.v * other
+        return NotImplemented
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __repr__(self):
+        return str(self.v)

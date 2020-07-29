@@ -36,3 +36,7 @@ class SamplingRun(BaseFixedVarsRun):
 class QualityOnlySamplingRun(BaseFixedVarsRun):
     def __init__(self, uid=None):
         super(QualityOnlySamplingRun, self).__init__(uid)
+
+
+class MaxProductRun(BaseRun):
+    pass

@@ -1,8 +1,10 @@
 from functools import reduce
 from types import MethodType
 
+from structured_dpp.semiring import MaxProductValue
+
 from .node import Node
-from .run_types import SamplingRun
+from .run_types import SamplingRun, MaxProductRun
 
 
 class Factor(Node):
@@ -94,7 +96,10 @@ class Factor(Node):
                 assert to in assignment  # to better be the key or else we're calculating stuff for unconnected nodes
                 assignment_value = self.get_weight(assignment, run=run)
 
-            message = message + assignment_value if message else assignment_value
+            if isinstance(run, MaxProductRun):
+                message = message if message is not None and assignment_value < message.v else MaxProductValue(assignment_value, assignment)
+            else:
+                message = message + assignment_value if message is not None else assignment_value
 
         return message
 
