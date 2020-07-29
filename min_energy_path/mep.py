@@ -13,7 +13,14 @@ start_time = time.time()
 
 
 # First set up some constants we're going to need
-N_SPANNING_GAP = 10
+N_SPANNING_GAP = 15
+N_VARIABLES = N_SPANNING_GAP
+
+TUNING_STRENGTH = 1
+TUNING_STRENGTH_DIFF = .75
+TUNING_GRAD = 2
+TUNING_DIST = .8
+
 POINTS_INFO = create_sphere_points(minima_coords, N_SPANNING_GAP)
 SPHERE_BEFORE = POINTS_INFO['sphere_before']
 SPHERE = POINTS_INFO['sphere']
@@ -44,24 +51,27 @@ plot_scatter_with_minima(SPHERE, minima_coords, plt)
 def intermediate_factor_quality(idx1, idx2):
     if idx1 == idx2:
         return 0
-    pos1, pos2 = SPHERE[:, idx1], SPHERE[:, idx2]
+    pos = SPHERE[:, [idx1, idx2]]
+    pos1, pos2 = pos.T
+    midpoint = (pos1 + pos2) / 2
+    pos = np.concatenate((pos, midpoint[:, np.newaxis]), axis=1)
 
     direction = pos2 - pos1
     length = scila.norm(direction)
     if length >= 3 * POINT_DISTANCE:
         return 0
     direction_normed = direction/length
-    dist_quality = np.exp(-length/(2*POINT_DISTANCE))
+    dist_quality = np.exp(-TUNING_DIST*length/(2*POINT_DISTANCE))
 
-    midpoint = (pos1 + pos2) / 2
-
-    strength = gaussian_field(midpoint[:, np.newaxis], mix_mag, mix_sig, mix_centre)
-    strength_quality = np.exp(-strength)
+    strength = gaussian_field(pos, mix_mag, mix_sig, mix_centre)
+    strength_diff = strength[0] - strength[1]  # Strength 1 is closer to the root, as it is the parent
+    strength_diff_quality = np.exp(-TUNING_STRENGTH_DIFF*strength_diff) if strength_diff > 0 else 1
+    strength_quality = np.exp(-TUNING_STRENGTH*np.sum(strength)/3)
 
     grad = gaussian_field_grad(midpoint[:, np.newaxis], mix_mag, mix_sig, mix_centre)[:, 0]
     grad_perp = grad - np.dot(grad, direction_normed) * direction_normed
-    grad_quality = np.exp(-scila.norm(grad_perp))
-    return strength_quality*dist_quality*grad_quality
+    grad_quality = np.exp(-TUNING_GRAD*scila.norm(grad_perp))
+    return strength_quality*strength_diff_quality*dist_quality*grad_quality
 
 
 def error_diversity(*args):
@@ -70,7 +80,7 @@ def error_diversity(*args):
 
 current_var = Variable((ROOT_INDEX,), name='RootVar0')
 nodes_to_add = [current_var]
-for i in range(1, N_SPANNING_GAP):
+for i in range(1, N_VARIABLES):
     # Add transition factor
     transition_factor = SDPPFactor(intermediate_factor_quality,
                                    error_diversity,
@@ -78,7 +88,7 @@ for i in range(1, N_SPANNING_GAP):
                                    name=f'Fac{i-1}-{i}')
     nodes_to_add.append(transition_factor)
 
-    if i == N_SPANNING_GAP - 1:
+    if i == N_VARIABLES - 1:
         current_var = Variable((TAIL_INDEX,),
                                parent=transition_factor,
                                name=f'TailVar{i}')
@@ -94,7 +104,7 @@ for i in range(1, N_SPANNING_GAP):
 
 ftree = SDPPFactorTree.create_from_connected_nodes(nodes_to_add)
 
-assignments = ftree.sample_quality_only(4)
+assignments = ftree.sample_quality_only(10)
 
 
 print(f'Running time {time.time() - start_time}')
