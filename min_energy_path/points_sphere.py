@@ -2,6 +2,7 @@ import numpy as np
 import scipy.linalg as scila
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import warnings
 
 
 def create_sphere_basis(minima):
@@ -51,8 +52,8 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
     # There must be an even number of points outside the gap, an equal number each side
     n_total -= (n_total - n_spanning_gap) % 2
     if n_total < n_spanning_gap + 2:
-        raise ValueError("n_spanning_gap and gap_proportion mean that there aren't enough points "
-                         "for some to go behind the minima")
+        warnings.warn("n_spanning_gap and gap_proportion mean that there aren't enough points "
+                      "for some to go behind the minima")
     n_overflow = (n_total - n_spanning_gap)/2
     n_horizontal = np.ceil(shrink_in_direction*n_total/2)
 

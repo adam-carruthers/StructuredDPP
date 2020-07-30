@@ -30,3 +30,28 @@ def starter():
     xbounds = (-2, 7)
     ybounds = (-5, 4)
     return mix_mag, mix_sig, mix_centre, minima_coords, xbounds, ybounds
+
+
+def basic3d():
+    mix_mag = np.array([-1, 1, -1])
+    mix_sig = np.array([1, 1.5, 1])
+    mix_centre = np.array([[0, 1, 2],
+                           [0, 1, 2],
+                           [0, 1, 2]])
+    minima_coords = mix_centre[:, [0, -1]]
+    xbounds = (-1, 3)
+    ybounds = (-1, 3)
+    zbounds = (-1, 3)
+    return mix_mag, mix_sig, mix_centre, minima_coords, xbounds, ybounds, zbounds
+
+def medium3d():
+    mix_mag = np.array([-1, 1, 1, 1, 1, 1, 1, 1, 1, -1])
+    mix_sig = np.ones_like(mix_mag)
+    mix_centre = np.array([[0, 1, 1, 1, 1, 1, 1, 1, 1, 2],
+                           [0, -1, -1, -1, 0, 0, 0, 1, 1, 0],
+                           [0, -1, 0, 1, -1, 0, 1, -1, 0, 0]])
+    minima_coords = mix_centre[:, [0, -1]]
+    xbounds = (-1, 3)
+    ybounds = (-1, 3)
+    zbounds = (-2, 2)
+    return mix_mag, mix_sig, mix_centre, minima_coords, xbounds, ybounds, zbounds
