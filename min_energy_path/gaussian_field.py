@@ -21,7 +21,7 @@ def gaussian_field(coords, mix_magnitude, mix_sigma, mix_centre):
     coords = coords.T  # The formula below uses the coordinates as row vectors
     mix_centre = mix_centre.T
     return np.sum(mix_magnitude[np.newaxis, :] * np.exp(
-        np.sum(-(coords[:, :, np.newaxis] - mix_centre.T[np.newaxis, :, :])**2, axis=1) / mix_sigma[np.newaxis, :]**2
+        np.sum(-(coords[:, :, np.newaxis] - mix_centre.T[np.newaxis, :, :])**2, axis=1) / (2*mix_sigma[np.newaxis, :]**2)
     ), axis=1)
 
 
@@ -42,11 +42,34 @@ def gaussian_field_grad(coords, mix_magnitude, mix_sigma, mix_centre):
     coords = coords.T  # The formula below uses the coordinates as row vectors
     mix_centre = mix_centre.T
     coords_transformed = coords[:, :, np.newaxis] - mix_centre.T[np.newaxis, :, :]
-    scale = mix_magnitude[np.newaxis, :] * -2 / mix_sigma[np.newaxis, :]**2 * np.exp(
+    scale = -mix_magnitude[np.newaxis, :] / mix_sigma[np.newaxis, :]**2 * np.exp(
         -np.sum(coords_transformed**2, axis=1) / mix_sigma**2
     )
     grad = np.sum(scale[:, np.newaxis, :] * coords_transformed, axis=2)
     return grad.T
+
+
+def gaussian_field_hess(coords, mix_magnitude, mix_sigma, mix_centre):
+    """
+    Calculate the grad of a gaussian mixture field at a set of coordinates
+    :param coords:
+        Matrix shape (d dimensions, n points)
+    :param mix_magnitude:
+        Vector shape (m gaussians,)
+    :param mix_sigma:
+        Vector shape (m gaussians,)
+    :param mix_centre:
+        Matrix shape (d dimensions, m gaussians)
+    :return:
+        Multiarray shape (d dimensions, d dimensions, n points) of hessian matrices
+    """
+    coords = coords.T  # The formula below uses the coordinates as row vectors
+    mix_centre = mix_centre.T
+    coords_transformed = coords[:, :, np.newaxis] - mix_centre.T[np.newaxis, :, :]
+    scale = mix_magnitude[np.newaxis, :] / mix_sigma[np.newaxis, :]**4 * np.exp(
+        -np.sum(coords_transformed**2, axis=1) / mix_sigma**2
+    )
+
 
 
 def plot_gaussian(mix_mag, mix_sig, mix_centre, xbounds, ybounds):
@@ -73,4 +96,13 @@ def plot_gaussian(mix_mag, mix_sig, mix_centre, xbounds, ybounds):
     fig, ax = plt.subplots()
     plt.pcolormesh(x_grid, y_grid, z_grid, cmap=cmap)
     fig.colorbar(sm)
+
+
+def get_gaussian_slice(xbounds, ybounds, zbounds, xstep, ystep, zstep, basis, mix_mag, mix_sig, mix_centre):
+    x = np.arange(*xbounds, xstep)
+    y = np.arange(*ybounds, ystep)
+    z = np.arange(*zbounds, zstep)
+    X, Y, Z = np.meshgrid(x, y, z)
+    coords = np.array([X.flatten(), Y.flatten(), Z.flatten])
+
 

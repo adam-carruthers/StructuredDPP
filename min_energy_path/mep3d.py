@@ -14,12 +14,12 @@ start_time = time.time()
 
 
 # First set up some constants we're going to need
-N_SPANNING_GAP = 8
-N_VARIABLES = N_SPANNING_GAP + 2
+N_SPANNING_GAP = 7
+N_VARIABLES = N_SPANNING_GAP + 1
 
-TUNING_STRENGTH = 0.8
-TUNING_STRENGTH_DIFF = 1.5
-TUNING_GRAD = 1
+TUNING_STRENGTH = 1.5
+TUNING_STRENGTH_DIFF = 3
+TUNING_GRAD = 0.5
 TUNING_DIST = .25
 LENGTH_CUTOFF = 4
 
@@ -52,6 +52,33 @@ for i, point in enumerate(SPHERE.T):
 if None in [ROOT_INDEX, TAIL_INDEX]:
     raise ValueError("Couldn't find root or tail index.")
 ROOT_DIR_INDEX = np.where(DIR_COMPONENT == SPHERE_BEFORE[0, ROOT_INDEX])[0][0]
+
+
+@assignment_to_var_arguments
+def intermediate_factor_quality_breakdown(idx1, idx2):
+    if idx1 == idx2:
+        return 0, 0, 0, 0
+    pos = SPHERE[:, [idx1, idx2]]
+    pos1, pos2 = pos.T
+    midpoint = (pos1 + pos2) / 2
+    pos = np.concatenate((pos, midpoint[:, np.newaxis]), axis=1)
+
+    direction = pos2 - pos1
+    length = scila.norm(direction)
+    if length >= LENGTH_CUTOFF * POINT_DISTANCE:
+        return 0, 0, 0, 0
+    direction_normed = direction/length
+    dist_quality = np.exp(-TUNING_DIST*length/(2*POINT_DISTANCE))
+
+    strength = gaussian_field(pos, MIX_MAG, MIX_SIG, MIX_CENTRE)
+    strength_diff = strength[0] - strength[1]  # Strength 1 is closer to the root, as it is the parent
+    strength_diff_quality = np.exp(-TUNING_STRENGTH_DIFF*strength_diff) if strength_diff > 0 else 1
+    strength_quality = np.exp(-TUNING_STRENGTH*np.sum(strength)/3)
+
+    grad = gaussian_field_grad(midpoint[:, np.newaxis], MIX_MAG, MIX_SIG, MIX_CENTRE)[:, 0]
+    grad_perp = grad - np.dot(grad, direction_normed) * direction_normed
+    grad_quality = np.exp(-TUNING_GRAD*scila.norm(grad_perp))
+    return strength_quality, strength_diff_quality, dist_quality, grad_quality
 
 
 @assignment_to_var_arguments
@@ -122,7 +149,7 @@ def get_good_max_samples(var: Variable, run, n_per_group=3):
     return groups
 
 index_of_middle = len(nodes_to_add) // 2
-var5 = nodes_to_add[index_of_middle - (index_of_middle % 2)]
+var5 = nodes_to_add[index_of_middle - (index_of_middle % 2) - 2]
 
 traversal, run = ftree.run_max_quality_forward(var5)
 good_max_samples = get_good_max_samples(var5, run, 4)
@@ -146,7 +173,21 @@ for assignment, (grp, (good_max_idx, good_max)) in zip(assignments, good_max_sam
         SPHERE[:, assignment[var]] for var in ftree.get_variables()
     ]).T
     ax.plot(*points, label=f'{grp}')
+    print(grp, good_max)
 
 
 plt.legend()
 plt.show()
+
+# Examining group (0, 0)
+good_maxs = list(zip(assignments, good_max_samples.items()))
+assignment = good_maxs[4][0]
+quality_breakdown = [1, 1, 1, 1]
+for node in ftree.get_nodes():
+     if isinstance(node, SDPPFactor):
+         fac_qual_breakdown = intermediate_factor_quality_breakdown(node, assignment)
+         print(node, fac_qual_breakdown)
+         quality_breakdown = [q1 * q2 for q1, q2 in zip(quality_breakdown, fac_qual_breakdown)]
+     else:
+         print(node, SPHERE[:, assignment[node]])
+print('Overall', quality_breakdown)

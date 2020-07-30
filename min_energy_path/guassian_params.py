@@ -16,9 +16,9 @@ def starter():
     gaussian_mix_params = np.array([
         [-1, 2, 0, 0],  # A, sigma, x0, y0
         [2, 0.5, 2, 1],
-        [1, 1, 3, -1.5],
+        [1, 0.5, 3, -1.1],
         [1.5, 0.5, 4, 0],
-        [-1, 1, 5, 0]
+        [-1, 1.5, 5, 0]
     ])
     mix_mag = gaussian_mix_params[:, 0]
     mix_sig = gaussian_mix_params[:, 1]
