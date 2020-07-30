@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import scipy.linalg as scila
 
 
 def gaussian_field(coords, mix_magnitude, mix_sigma, mix_centre):
@@ -44,3 +47,30 @@ def gaussian_field_grad(coords, mix_magnitude, mix_sigma, mix_centre):
     )
     grad = np.sum(scale[:, np.newaxis, :] * coords_transformed, axis=2)
     return grad.T
+
+
+def plot_gaussian(mix_mag, mix_sig, mix_centre, xbounds, ybounds):
+    # Plot the scalar field
+    # First create an x, y grid
+    x = np.linspace(*xbounds, 100)
+    y = np.linspace(*ybounds, 100)
+    x_grid, y_grid = np.meshgrid(x, y)
+    x_flat, y_flat = x_grid.flatten(), y_grid.flatten()
+    coords = np.array([x_flat,
+                       y_flat])
+
+    # Work out z
+    z_flat = gaussian_field(coords, mix_mag, mix_sig, mix_centre)
+    z_grid = z_flat.reshape(x_grid.shape)
+
+
+    # Set up the color map
+    cmap = plt.cm.get_cmap('coolwarm')
+    norm = mpl.colors.Normalize(vmin=np.min(z_flat), vmax=np.max(z_flat))
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+
+    # Plot everything
+    fig, ax = plt.subplots()
+    plt.pcolormesh(x_grid, y_grid, z_grid, cmap=cmap)
+    fig.colorbar(sm)
+

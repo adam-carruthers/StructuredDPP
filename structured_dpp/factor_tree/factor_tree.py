@@ -202,7 +202,7 @@ class FactorTree:
         for node, node_above in traversal[1:]:
             node_above.create_all_messages_to(node, run)
 
-    def get_max_quality(self, start_node=None, run_uid=None):
+    def run_max_quality_forward(self, start_node=None, run_uid=None):
         start_node = start_node if start_node else self.root
         if not isinstance(start_node, Variable):
             raise ValueError('Max quality runs must start from a Variable')
@@ -211,12 +211,20 @@ class FactorTree:
         traversal = self.generate_depth_first_traversal(start_node=start_node)
 
         self.run_forward_pass_from_traversal(traversal, run)
-        root_max_m, root_max_m_assignment = start_node.calculate_max_message_assignment(run)
-        logger.info(f'Max path has quality {root_max_m}, starting assigning')
-        assignments = {self.root: root_max_m_assignment}
+        start_node.calculate_all_beliefs(run)
+        return traversal, run
+
+    def get_max_from_start_assignment(self, start_node, start_assignment, traversal, run):
+        assignments = {start_node: start_assignment}
         for node, node_above in traversal[1:]:  # Selects factor levels only
             if isinstance(node, Factor):
                 message = node.get_outgoing_message(node_above, assignments[node_above], run)
                 assignments.update(message.assignment)
 
         return assignments
+
+    def get_max_quality(self, start_node=None, run_uid=None):
+        traversal, run = self.run_max_quality_forward(start_node, run_uid)
+        root_max_m, root_max_m_assignment = start_node.calculate_max_message_assignment(run)
+        logger.info(f'Max path has quality {root_max_m}, starting assigning')
+        return self.get_max_from_start_assignment(start_node, root_max_m_assignment, traversal, run)

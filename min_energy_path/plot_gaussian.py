@@ -24,7 +24,7 @@ minima_coords = np.array([
     [0, 0]
 ])
 
-def plot_gaussian():
+def plot_gaussian(with_arrows=False):
     # Plot the scalar field
     # First create an x, y grid
     x = np.linspace(-2, 7, 100)
@@ -49,18 +49,19 @@ def plot_gaussian():
     plt.pcolormesh(x_grid, y_grid, z_grid, cmap=cmap)
     fig.colorbar(sm)
 
-    # Work out the gradient to plot
-    arrow_coords = np.array([[1, -1],
-                             [4.5, 0],
-                             [2, 2]]).T  # Use column vectors
-    grad = gaussian_field_grad(arrow_coords, mix_mag, mix_sig, mix_centre)
-    grad /= scila.norm(grad, axis=0)[np.newaxis, :] * 1.5
-    for (arrow_x, arrow_y), (dx, dy) in zip(arrow_coords.T, grad.T):
-        plt.arrow(arrow_x, arrow_y, dx, dy, head_width=0.2, head_length=0.1)
+    if with_arrows:
+        # Work out the gradient to plot
+        arrow_coords = np.array([[1, -1],
+                                 [4.5, 0],
+                                 [2, 2]]).T  # Use column vectors
+        grad = gaussian_field_grad(arrow_coords, mix_mag, mix_sig, mix_centre)
+        grad /= scila.norm(grad, axis=0)[np.newaxis, :] * 1.5
+        for (arrow_x, arrow_y), (dx, dy) in zip(arrow_coords.T, grad.T):
+            plt.arrow(arrow_x, arrow_y, dx, dy, head_width=0.2, head_length=0.1)
 
     # Plot the circle
     ax.add_artist(plt.Circle((2.5, 0), 5/(2*0.7), color='r', fill=False))
 
 if __name__ == '__main__':
-    plot_gaussian()
+    plot_gaussian(True)
     plt.show()

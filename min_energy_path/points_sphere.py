@@ -54,7 +54,7 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
         raise ValueError("n_spanning_gap and gap_proportion mean that there aren't enough points "
                          "for some to go behind the minima")
     n_overflow = (n_total - n_spanning_gap)/2
-    n_horizontal = np.ceil(n_total/2)
+    n_horizontal = np.ceil(shrink_in_direction*n_total/2)
 
     # Where is the first point located?
     first_point_pos = minima[:, 0] - minima_direction * point_distance * n_overflow
