@@ -78,7 +78,7 @@ class SDPPFactorTree(FactorTree):
 
     def sample_from_SDPP(self, calc_C_eigdec=True, run_uid=None, random_state=None):
         """
-        Create a sample from the SDPP
+        Create a start_sample from the SDPP
         :param bool calc_C_eigdec: Whether to calculate C's eigendecomposition if it isn't computed already.
         This can be an expensive step.
         :param run_uid: The UID to associate with the run in the factors.
@@ -90,8 +90,8 @@ class SDPPFactorTree(FactorTree):
 
     def sample_from_kSDPP(self, k, calc_C_eigdec=True, run_uid=None, random_state=None):
         """
-        Create a sample from the kSDPP
-        :param int k: How many items to sample from the DPP
+        Create a start_sample from the kSDPP
+        :param int k: How many items to start_sample from the DPP
         :param bool calc_C_eigdec: Whether to calculate C's eigendecomposition if it isn't computed already.
         This can be an expensive step.
         :param run_uid: The UID to associate with the run in the factors.
@@ -119,7 +119,7 @@ class SDPPFactorTree(FactorTree):
 
     def run_sample_from_V_hat(self, V_hat_eigvects, run_uid=None, random_state=None):
         """
-        Given a selection of eigenvectors V_hat, create a sample from the SDPP
+        Given a selection of eigenvectors V_hat, create a start_sample from the SDPP
         :param V_hat_eigvects: The selected eigenvectors V_hat.
         Normally a selection of eigenvectors from C divided by sqrt of their eigenvalue
         :param run_uid:
@@ -130,7 +130,7 @@ class SDPPFactorTree(FactorTree):
 
         assignments = []
         for k in range(V_hat_eigvects.shape[1], 0, -1):
-            # Do a sampling run which will return one sample from the SDPP
+            # Do a sampling run which will return one start_sample from the SDPP
             run = SamplingRun(V_hat_eigvects, (run_uid, k))
             self.run_forward_pass(run)
             logger.info('Starting recursive sampling')

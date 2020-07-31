@@ -7,6 +7,6 @@ import functools
 
 def assignment_to_var_arguments(func):
     @functools.wraps(func)
-    def new_func(factor, assignment):
-        return func(*(assignment[var] for var in factor.get_connected_nodes()))
+    def new_func(factor, assignment, **kwargs):
+        return func(*(assignment[var] for var in factor.get_connected_nodes()), **kwargs)
     return new_func

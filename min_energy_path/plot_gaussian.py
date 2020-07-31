@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import scipy.linalg as scila
 
-from min_energy_path.gaussian_field import gaussian_field, gaussian_field_grad
+from min_energy_path.gaussian_field import gaussian_field, gaussian_grad
 
 
 # First create the scalar field we're navigating
@@ -54,7 +54,7 @@ def plot_gaussian(with_arrows=False):
         arrow_coords = np.array([[1, -1],
                                  [4.5, 0],
                                  [2, 2]]).T  # Use column vectors
-        grad = gaussian_field_grad(arrow_coords, mix_mag, mix_sig, mix_centre)
+        grad = gaussian_grad(arrow_coords, mix_mag, mix_sig, mix_centre)
         grad /= scila.norm(grad, axis=0)[np.newaxis, :] * 1.5
         for (arrow_x, arrow_y), (dx, dy) in zip(arrow_coords.T, grad.T):
             plt.arrow(arrow_x, arrow_y, dx, dy, head_width=0.2, head_length=0.1)
