@@ -76,6 +76,17 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
     basis = create_sphere_basis(minima)
     sphere = first_point_pos[:, np.newaxis] + basis @ sphere_before
 
+    # Find the minima indices
+    root_index, tail_index = None, None
+    for i, point in enumerate(sphere.T):
+        if np.allclose(point, minima[:, 0]):
+            root_index = i
+        if np.allclose(point, minima[:, 1]):
+            tail_index = i
+    if None in [root_index, tail_index]:
+        raise ValueError("Couldn't find root or tail index.")
+    root_dir_index = np.where(dir_component == sphere_before[0, root_index])[0][0]
+
     return {'sphere_before': sphere_before,
             'sphere': sphere,
             'n_total': n_total,
@@ -83,7 +94,10 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
             'minima_distance': minima_distance,
             'point_distance': point_distance,
             'n_overflow': n_overflow,
-            'dir_component': dir_component
+            'dir_component': dir_component,
+            'root_index': root_index,
+            'tail_index': tail_index,
+            'root_dir_index': root_dir_index
             }
 
 

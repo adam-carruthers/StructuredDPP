@@ -3,8 +3,8 @@ from min_energy_path.gaussian_field import gaussian_field_for_quality
 from structured_dpp.factor_tree import *
 
 
-def generate_sphere_slice_path(intermediate_factor_quality, root_index, tail_index, root_dir_index,
-                               dir_component, sphere_before, n_variables, n_slices_behind, n_slices_ahead):
+def generate_sphere_slice_path(intermediate_factor_quality, root_index, tail_index, root_dir_index, dir_component,
+                               sphere_index, sphere_before, n_variables, n_slices_behind, n_slices_ahead):
     current_var = Variable((root_index,), name='RootVar0')
     nodes_to_add = [current_var]
     for i in range(1, n_variables):
@@ -23,7 +23,7 @@ def generate_sphere_slice_path(intermediate_factor_quality, root_index, tail_ind
             slice_of_dir = dir_component[max(root_dir_index+i-n_slices_behind, 0):root_dir_index+i+1+n_slices_ahead]
             in_slice = (np.min(slice_of_dir) <= sphere_before[0, :]) & (sphere_before[0, :] <= np.max(slice_of_dir))
 
-            current_var = Variable(sphere_before[in_slice].T,
+            current_var = Variable(sphere_index[in_slice].T,
                                    parent=transition_factor,
                                    name=f'Var{i}')
         nodes_to_add.append(current_var)
@@ -40,7 +40,7 @@ def get_standard_factor(sphere, mix_mag, mix_sig, mix_centre, point_distance, le
     Returns the factor quality function given the input parameters.
     """
     @assignment_to_var_arguments
-    def intermediate_factor_quality(idx0, idx1, print_breakdown=False):  # idx1 closer to the root
+    def intermediate_factor_quality(idx0, idx1, return_breakdown=False):  # idx1 closer to the root
         if idx0 == idx1:
             return 0
         coords = sphere[:, [idx0, idx1]]
@@ -70,7 +70,7 @@ def get_standard_factor(sphere, mix_mag, mix_sig, mix_centre, point_distance, le
                 # Gradient score
                 # Favor small tangential gradients in areas with a high second order derivative
                 # Give negative score to very large orthogonal gradient lengths
-                - tuning_grad * orthog_grad_length * second_order_guess,
+                - tuning_grad * orthog_grad_length,
                 # Second order score
                 # Favor the path being at a minimum orthogonal to the path
                 # This means that the two points orthogonal to the direction of the path
@@ -78,8 +78,8 @@ def get_standard_factor(sphere, mix_mag, mix_sig, mix_centre, point_distance, le
                 + tuning_second_order * second_order_guess
         )
 
-        if print_breakdown:
-            print(score)
+        if return_breakdown:
+            return score
 
         return np.exp(sum(score))
     return intermediate_factor_quality
@@ -110,7 +110,7 @@ def calculate_good_paths(start_sample, var, traversal, run, ftree):
     ]
 
 
-def breakdown_good_path(good_path, ftree: FactorTree, quality, sphere):
+def breakdown_good_path(good_path, ftree: FactorTree, quality, sphere, len_breakdown=5):
     """
     Print to the console a breakdown of a good path and its quality breakdown
     """
@@ -119,10 +119,12 @@ def breakdown_good_path(good_path, ftree: FactorTree, quality, sphere):
     print(f'''Examining path in group {grp}
 q = {good_max}
 ------------''')
-
+    total = [0]*len_breakdown
     for node in ftree.get_nodes():
         if isinstance(node, Factor):
-            print(node, end=' ')
-            quality(node, assignment, print_breakdown=True)
+            quality_breakdown = quality(node, assignment, return_breakdown=True)
+            print(node, quality_breakdown)
+            total = [x+y for x,y in zip(total, quality_breakdown)]
         else:
             print(node, sphere[:, assignment[node]])
+    print('Overall', total)
