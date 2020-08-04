@@ -90,14 +90,14 @@ def gaussian_field_for_quality(coords, mix_mag, mix_sig, mix_centre, point_dista
     field_strength = _field_strength(coords_transformed, mix_mag, mix_sig)
     pos0_strength, pos1_strength, mid_strength = np.sum(field_strength, axis=1)
 
-    # Find the magnitude of the gradient perpendicular to the direction of the path
+    # Find the magnitude of the gradient perpendicular to the direction of the path_guess
     grad = _gaussian_grad(coords_transformed[:, [2], :], field_strength[[2], :], mix_sig)[:, 0]
     orthog_grad = grad - np.dot(grad, direction) * direction / direction_length**2
     orthog_grad_length = scila.norm(orthog_grad)
 
-    # Get a good vector perpendicular to the direction of the path,
+    # Get a good vector perpendicular to the direction of the path_guess,
     # preferably in the highest gradient direction
-    # not possible for small gradients, or gradients in the direction of the path
+    # not possible for small gradients, or gradients in the direction of the path_guess
     if orthog_grad_length >= 1e-8:
         orthog_direction = orthog_grad / orthog_grad_length
     else:
@@ -108,15 +108,12 @@ def gaussian_field_for_quality(coords, mix_mag, mix_sig, mix_centre, point_dista
         orthog_direction /= scila.norm(orthog_direction)
 
     # Take small step either direction from the midpoint in the orthogonal direction
-    orthog_points = midpoint + np.array([[-1, 1]]) * point_distance * order_2_step
+    orthog_points = midpoint + np.array([[-1, 1]]) * point_distance * order_2_step * orthog_direction[:, np.newaxis]
     orthog0_strength, orthog1_strength = gaussian_field(orthog_points, mix_mag, mix_sig, mix_centre)
     # Use the finite difference method of estimating the second order derivative
     second_order_guess = (orthog1_strength - 2*mid_strength + orthog0_strength) / (point_distance * order_2_step)**2
 
     return pos0_strength, pos1_strength, mid_strength, second_order_guess, direction_length, orthog_grad_length
-
-
-
 
 
 def plot_gaussian(mix_mag, mix_sig, mix_centre, xbounds, ybounds):
@@ -143,6 +140,7 @@ def plot_gaussian(mix_mag, mix_sig, mix_centre, xbounds, ybounds):
     fig, ax = plt.subplots()
     plt.pcolormesh(x_grid, y_grid, z_grid, cmap=cmap)
     fig.colorbar(sm)
+    ax.axis('equal')
 
 
 def get_gaussian_slice(xbounds, ybounds, zbounds, xstep, ystep, zstep, basis, mix_mag, mix_sig, mix_centre):

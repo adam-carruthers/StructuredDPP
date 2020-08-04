@@ -5,7 +5,7 @@ import time
 
 from min_energy_path.path_helpers import (get_standard_factor, get_good_path_start_samples, calculate_good_paths,
                                           generate_sphere_slice_path, breakdown_good_path)
-from min_energy_path.guassian_params import medium3d
+from min_energy_path.gaussian_params import medium3d
 from min_energy_path.points_sphere import create_sphere_points
 
 
@@ -18,6 +18,7 @@ N_SPANNING_GAP = 7
 MIX_MAG, MIX_SIG, MIX_CENTRE, MINIMA_COORDS, XBOUNDS, YBOUNDS, ZBOUNDS = medium3d()
 
 POINTS_INFO = create_sphere_points(MINIMA_COORDS, N_SPANNING_GAP)
+# TODO: Make it so it just uses a dictionary of params
 SPHERE_BEFORE = POINTS_INFO['sphere_before']
 SPHERE = POINTS_INFO['sphere']
 SPHERE_INDEX = np.arange(SPHERE.shape[1])

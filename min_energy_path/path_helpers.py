@@ -72,8 +72,8 @@ def get_standard_factor(sphere, mix_mag, mix_sig, mix_centre, point_distance, le
                 # Give negative score to very large orthogonal gradient lengths
                 - tuning_grad * orthog_grad_length,
                 # Second order score
-                # Favor the path being at a minimum orthogonal to the path
-                # This means that the two points orthogonal to the direction of the path
+                # Favor the path_guess being at a minimum orthogonal to the path_guess
+                # This means that the two points orthogonal to the direction of the path_guess
                 # will have higher strengths than the midpoint
                 + tuning_second_order * second_order_guess
         )
@@ -88,7 +88,7 @@ def get_standard_factor(sphere, mix_mag, mix_sig, mix_centre, point_distance, le
 def get_good_path_start_samples(var, run, sphere_before, point_distance, n_per_group=3):
     """
     Takes var, which has had a max quality run performed on it, and returns a start_sample of the max quality paths.
-    The start_sample is the max path that passes through one section of the variables allowed variables.
+    The start_sample is the max path_guess that passes through one section of the variables allowed variables.
     """
     sample = {}
     for idx in var.allowed_values:
@@ -102,7 +102,7 @@ def get_good_path_start_samples(var, run, sphere_before, point_distance, n_per_g
 
 def calculate_good_paths(start_sample, var, traversal, run, ftree):
     """
-    Given a generated max path start_sample, calculate the paths to follow and return the path data.
+    Given a generated max path_guess start_sample, calculate the paths to follow and return the path_guess data.
     """
     return [
         [grp, start_val, path_value, ftree.get_max_from_start_assignment(var, start_val, traversal, run)]
@@ -112,12 +112,13 @@ def calculate_good_paths(start_sample, var, traversal, run, ftree):
 
 def breakdown_good_path(good_path, ftree: FactorTree, quality, sphere, len_breakdown=5):
     """
-    Print to the console a breakdown of a good path and its quality breakdown
+    Print to the console a breakdown of a good path_guess and its quality breakdown
     """
     grp, good_max_idx, good_max, assignment = good_path
 
-    print(f'''Examining path in group {grp}
+    print(f'''Examining path_guess in group {grp}
 q = {good_max}
+Dist, Strength, Strength Diff, Grad, Second Order
 ------------''')
     total = [0]*len_breakdown
     for node in ftree.get_nodes():

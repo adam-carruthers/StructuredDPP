@@ -6,7 +6,7 @@ import time
 from structured_dpp.factor_tree import *
 
 from min_energy_path.gaussian_field import plot_gaussian
-from min_energy_path.guassian_params import starter
+from min_energy_path.gaussian_params import shallow
 from min_energy_path.points_sphere import create_sphere_points, plot_scatter_with_minima
 from min_energy_path.path_helpers import (get_standard_factor, get_good_path_start_samples, calculate_good_paths,
                                           breakdown_good_path, generate_sphere_slice_path)
@@ -18,7 +18,7 @@ N_SPANNING_GAP = 10
 N_VARIABLES = N_SPANNING_GAP + 2
 
 # Constants relating to the gaussian field
-MIX_MAG, MIX_SIG, MIX_CENTRE, MINIMA_COORDS, XBOUNDS, YBOUNDS = starter()
+MIX_MAG, MIX_SIG, MIX_CENTRE, MINIMA_COORDS, XBOUNDS, YBOUNDS = shallow()
 
 POINTS_INFO = create_sphere_points(MINIMA_COORDS, N_SPANNING_GAP)
 SPHERE_BEFORE = POINTS_INFO['sphere_before']
@@ -47,8 +47,8 @@ intermediate_factor_quality = get_standard_factor(
     tuning_dist=.25,
     tuning_strength=.75,
     tuning_strength_diff=1,
-    tuning_grad=0.5,
-    tuning_second_order=1/30
+    tuning_grad=1,
+    tuning_second_order=1
 )
 
 ftree, nodes_to_add = generate_sphere_slice_path(
