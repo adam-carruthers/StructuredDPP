@@ -26,7 +26,7 @@ POSITION_DIVERSITY_MATRICES = {pos: np.outer(POSITION_DIVERSITY_VECTORS[pos], PO
                                for pos in POSSIBLE_POSITIONS}
 
 
-# Specify the quality and diversity factors for the SDPP
+# Specify the quality_function and diversity factors for the SDPP
 def quality_one(*args):
     return 1
 

@@ -10,7 +10,7 @@ from .run_types import SamplingRun, MaxProductRun
 class Factor(Node):
     """
     A factor evaluates variables to which it is connected.
-    Given the variables taking certain values it can then evaluate the quality and diversity features
+    Given the variables taking certain values it can then evaluate the quality_function and diversity features
     associated with the factor.
     All connected nodes (parent, children) must be Variables
     """

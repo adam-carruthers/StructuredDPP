@@ -10,14 +10,14 @@ from .run_types import C_RUN, CRun, SamplingRun, QualityOnlySamplingRun, MaxProd
 class SDPPFactor(Factor):
     """
     A factor class more specialised to DPPs.
-    This means that it only needs to be given quality and diversity
+    This means that it only needs to be given quality_function and diversity
     so that you don't have to specify a complex weight function yourself.
     """  # TODO: Write prettier/better docs
     def __init__(self, get_quality, get_diversity, get_diversity_matrix=None, parent=None, children=None, name=None):
         """
         Creates a SDPPFactor
         :param function get_quality:
-            If given the factor and the assignment, work out the quality calculated by the factor.
+            If given the factor and the assignment, work out the quality_function calculated by the factor.
         :param function get_diversity:
             If given the factor and the assignment, calculate the diversity feature vector.
         :param get_diversity_matrix:

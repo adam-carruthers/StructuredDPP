@@ -205,7 +205,7 @@ class FactorTree:
     def run_max_quality_forward(self, start_node=None, run_uid=None):
         start_node = start_node if start_node else self.root
         if not isinstance(start_node, Variable):
-            raise ValueError('Max quality runs must start from a Variable')
+            raise ValueError('Max quality_function runs must start from a Variable')
 
         run = MaxProductRun(run_uid)
         traversal = self.generate_depth_first_traversal(start_node=start_node)
@@ -226,5 +226,5 @@ class FactorTree:
     def get_max_quality(self, start_node=None, run_uid=None):
         traversal, run = self.run_max_quality_forward(start_node, run_uid)
         root_max_m, root_max_m_assignment = start_node.calculate_max_message_assignment(run)
-        logger.info(f'Max path has quality {root_max_m}, starting assigning')
+        logger.info(f'Max path has quality_function {root_max_m}, starting assigning')
         return self.get_max_from_start_assignment(start_node, root_max_m_assignment, traversal, run)

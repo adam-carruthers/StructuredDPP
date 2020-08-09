@@ -55,7 +55,7 @@ class Variable(Node):
         # All messages where this variable is not set_value are zero
         # Other messages are as normal, however I increase p to reduce roundoff error
         # But I'm not sure if this is okay...
-        # It's equivalent to setting a very high quality for this variable having that particular value I think?
+        # It's equivalent to setting a very high quality_function for this variable having that particular value I think?
         if isinstance(run, QualityOnlySamplingRun):
             self.outgoing_messages[run] = {
                 to: {value: 1 if value == set_value else 0

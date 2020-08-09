@@ -89,6 +89,7 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
 
     return {'sphere_before': sphere_before,
             'sphere': sphere,
+            'sphere_index': np.arange(sphere.shape[1]),
             'n_total': n_total,
             'basis': basis,
             'minima_distance': minima_distance,

@@ -58,7 +58,7 @@ zeros_vector = np.zeros(n_positions)
 zeros_matrix = np.zeros((n_positions, n_positions))
 
 
-# Specify the quality and diversity factors for the SDPP
+# Specify the quality_function and diversity factors for the SDPP
 def quality_one(*args):
     return 1
 
