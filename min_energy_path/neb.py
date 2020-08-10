@@ -8,10 +8,19 @@ import numpy as np
 import scipy.linalg as scila
 import logging
 
-from min_energy_path.gaussian_field import gaussian_grad
+import min_energy_path.gaussian_field as gf
 
 
 logger = logging.getLogger(__name__)
+
+
+def plot_paths_and_tangents(path, tangent, scale=5, width=0.025):
+    plt.plot(*old_path)
+    plt.plot(*path)
+    for (x, y), (dx, dy) in zip(path[:, 1:-1].T, tangent.T):
+        plt.arrow(x, y, dx/scale, dy/scale, width=width)
+    plt.gca().axis('equal')
+    plt.show()
 
 
 def neb(path_guess, mix_params, n_iterations=3000, k=1., time_step=1.e-2):
@@ -36,10 +45,47 @@ def neb(path_guess, mix_params, n_iterations=3000, k=1., time_step=1.e-2):
     velocity = np.zeros((path.shape[0], path.shape[1]-2))
     old_force = np.zeros_like(velocity)
 
+    tangents = np.zeros((path.shape[0], path.shape[1]-2))
+
     for i in range(n_iterations):
-        # Calculate the tangent at each point
-        # Except the endpoints
-        tangents = path[:, 2:] - path[:, :-2]
+        # Calculate the energy at each point
+        coords_transformed = gf.transform_coords(path, mix_params)
+        field_strength = gf._field_strength(coords_transformed, mix_params)
+        path_energies = np.sum(field_strength, axis=1)
+
+        # Calculate the tangents
+        tip = path[:, 2:] - path[:, 1:-1]  # Tangent by difference to element in front
+        tim = path[:, 1:-1] - path[:, :-2]  # Tangent by difference to element behind
+        # From element 0 to n-1 is the next element bigger
+        # Also from element 1 to n is the previous element smaller
+        next_bigger = path_energies[:-1] < path_energies[1:]
+
+        energy_increasing = next_bigger[1:] & next_bigger[:-1]  # From element 1 to n-1 is E{i-1} < E{i} < E{i+1}
+        tangents[:, energy_increasing] = tip[:, energy_increasing]
+
+        energy_decreasing = (~next_bigger[1:]) & (~next_bigger[:-1])  # From element 1 to n-1 is E{i-1} > E{i} > E{i+1}
+        tangents[:, energy_decreasing] = tim[:, energy_decreasing]
+
+        # Critical points have a slightly different formula
+        # From element 1 to n-1 is it a max or min to its neighbors
+        at_critical = (~energy_increasing) & (~energy_decreasing)
+        # From element 1 to n-1 that are critical points the abs difference to the next element
+        next_next_bigger = path_energies[:-2] < path_energies[2:]  # From element 1 to n-1 is E{i-1} < E{i+1}
+        # Difference of critical points to point after
+        delta_e_forward = np.abs(path_energies[1:-1][at_critical] - path_energies[2:][at_critical])
+        delta_e_back = np.abs(path_energies[1:-1][at_critical] - path_energies[:-2][at_critical])
+        delta_e_table = np.array([delta_e_forward,
+                                  delta_e_back])
+        delta_e_max = np.max(delta_e_table, axis=0)
+        delta_e_min = np.min(delta_e_table, axis=0)
+        tangents[:, at_critical & next_next_bigger] = (
+                tip[:, at_critical & next_next_bigger]*delta_e_max[np.newaxis, next_next_bigger[at_critical]] +
+                tim[:, at_critical & next_next_bigger]*delta_e_min[np.newaxis, next_next_bigger[at_critical]]
+        )
+        tangents[:, at_critical & (~next_next_bigger)] = (
+                tip[:, at_critical & (~next_next_bigger)]*delta_e_min[np.newaxis, ~next_next_bigger[at_critical]] +
+                tim[:, at_critical & (~next_next_bigger)]*delta_e_max[np.newaxis, ~next_next_bigger[at_critical]]
+        )
         tangents /= scila.norm(tangents, axis=0, keepdims=True)
 
         # Calculate the distance between the points
@@ -50,7 +96,7 @@ def neb(path_guess, mix_params, n_iterations=3000, k=1., time_step=1.e-2):
         spring_component = k*(point_distances[:, 1:] - point_distances[:, :-1])*tangents
 
         # Tangential gradient component
-        gradients = gaussian_grad(path[:, 1:-1], mix_params)
+        gradients = gf._gaussian_grad(coords_transformed[:, 1:-1, :], field_strength[1:-1, :], mix_params)
         orth_grad_component = gradients - np.sum(gradients * tangents, axis=0, keepdims=True)*tangents
 
         # Apply forces using gradient

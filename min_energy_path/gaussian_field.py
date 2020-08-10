@@ -48,6 +48,15 @@ def gaussian_field(coords, mix_params):
 
 
 def _field_strength(coords_transformed, mix_params):
+    """
+
+    :param coords_transformed:
+        Matrix shape (d dimensions, n points, m gaussians)
+    :param mix_params:
+        See docstring for gaussian_field.py
+    :return:
+        Matrix (n points, m gaussians)
+    """
     return mix_params['magnitude'][np.newaxis, :] * np.exp(
         np.sum(-coords_transformed**2, axis=0) / (2*mix_params['sigma'][np.newaxis, :]**2)
     )

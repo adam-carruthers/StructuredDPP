@@ -33,8 +33,8 @@ quality_function = get_standard_factor(
     tuning_dist=.25,
     tuning_strength=1.5,
     tuning_strength_diff=1,
-    tuning_grad=1,
-    tuning_second_order=1/20,
+    tuning_grad=0,
+    tuning_second_order=0,
 )
 
 ftree = generate_sphere_slice_path(
