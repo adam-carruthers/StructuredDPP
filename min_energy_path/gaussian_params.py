@@ -49,14 +49,16 @@ def basic3d():
     }
 
 def medium3d():
-    mix_centre = np.array([[0, 1, 1, 1, 1, 1, 1, 1, 1, 2],
-                           [0, -1, -1, -1, 0, 0, 0, 1, 1, 0],
-                           [0, -1, 0, 1, -1, 0, 1, -1, 0, 0]])
     return {
-        'magnitude': np.array([-1, 1, 1, 1, 1, 1, 1, 1, 1, -1]),
+        'magnitude': np.array([-1, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, -1]),
         'sigma': np.ones(10),
-        'centre': mix_centre,
-        'minima_coords': mix_centre[:, [0, -1]],
+        'centre': np.array([[0, 1, 1, 1, 1, 1, 1, 1, 1, 2],
+                           [0, -1, -1, -1, 0, 0, 0, 1, 1, 0],
+                           [0, -1, 0, 1, -1, 0, 1, -1, 0, 0]]),
+        'minima_coords': np.array([
+            [-0.8, 0, 0],
+            [2.8, 0, 0]
+        ]).T,
         'xbounds': (-1, 3),
         'ybounds': (-1, 3),
         'zbounds': (-2, 2)

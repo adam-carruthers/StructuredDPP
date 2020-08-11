@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
 
+from min_energy_path import neb
 from min_energy_path.path_helpers import (get_standard_factor, get_good_path_start_samples, calculate_good_paths,
                                           generate_sphere_slice_path, breakdown_good_path)
 from min_energy_path.gaussian_params import medium3d
@@ -71,9 +72,18 @@ ax.set_zlabel('z')
 
 ax.scatter(*MIX_PARAMS['centre'], c=MIX_PARAMS['magnitude'], s=40*MIX_PARAMS['sigma'])
 
-for i, path_info in enumerate(good_paths_info):
-    ax.plot(*path_info['path'], label=f'{i}')
+# Get the top 3 best paths
+best_paths_info = []
+for i in range(3):
+    best = max(good_paths_info, key=lambda x: x['value'])
+    good_paths_info.remove(best)
+    best_paths_info.append(best)
+
+for i, path_info in enumerate(best_paths_info):
+    lines = ax.plot(*path_info['path'], label=f'{i}')
     print(i, path_info['value'])
+    neb_path = neb.neb_mep(path_info, POINTS_INFO, MIX_PARAMS, n_iterations=5000)
+    plt.plot(*neb_path, c=lines[0].get_color(), dashes=(2, 2))
 
 
 plt.legend()
