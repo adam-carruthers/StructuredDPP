@@ -172,7 +172,8 @@ def get_mix_params_info_decorator(n_iterations=1000, learning_rate=0.01, n_linsp
 
             # Secondly scan the direct line between the two minima
             line = np.linspace(*minima_positions.T, n_linspace, axis=-1)
-            mix_params['max_line_strength_diff'] = np.max(gaussian_field(line, mix_params)) - mix_params['min_minima_strength']
+            mix_params['max_line_strength'] = np.max(gaussian_field(line, mix_params))
+            mix_params['max_line_strength_diff'] = mix_params['max_line_strength'] - mix_params['min_minima_strength']
             return mix_params
         return params_with_info
     return find_mix_info_decorator
