@@ -86,6 +86,7 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
     if None in [root_index, tail_index]:
         raise ValueError("Couldn't find root or tail index.")
     root_dir_index = np.where(dir_component == sphere_before[0, root_index])[0][0]
+    tail_dir_index = np.where(dir_component == sphere_before[0, tail_index])[0][0]
 
     # Sphere index stuff
     sphere_index = np.arange(sphere.shape[1])
@@ -107,12 +108,14 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
             'dir_component': dir_component,
             'root_index': root_index,
             'tail_index': tail_index,
-            'root_dir_index': root_dir_index
+            'root_dir_index': root_dir_index,
+            'tail_dir_index': tail_dir_index
             }
 
 
 def get_nearby_sphere_indexes(center_index, n_around, points_info,
-                              slices_behind=None, slices_ahead=None, return_center=False, return_lower=True):
+                              slices_behind=None, slices_ahead=None, return_center=False, return_lower=True,
+                              min_dir_index=0, max_dir_index=None):
     """
     Takes in a sphere_index (that being the index of the column of the matrix of points in the sphere).
     It outputs a list of sphere_indexes in the grid n_around the point.
@@ -146,6 +149,11 @@ def get_nearby_sphere_indexes(center_index, n_around, points_info,
         Return the index of the center (the one passed to the function)
     :param bool return_lower:
         If true filter out indices lower than the center.
+    :param min_dir_index:
+        The minimum slice layer for which points can be returned
+    :param max_dir_index:
+        The upper value for the slice layer for which points can be returned
+        (exclusive, if the layer is n it can only return layer n-1)
     :return:
         List of indices in this area
     """
@@ -162,7 +170,8 @@ def get_nearby_sphere_indexes(center_index, n_around, points_info,
 
     # Slice a grid around the center in the spherey index
     indices_to_scan = points_info['spherey_index'][
-        (slice(max(c_unraveled_idx[0]-slices_behind, 0), c_unraveled_idx[0]+1+slices_ahead),)+
+        (slice(max(c_unraveled_idx[0]-slices_behind, min_dir_index),
+               min(c_unraveled_idx[0]+1+slices_ahead, max_dir_index)),)+
         tuple(
             slice(max(dim_index-n_around, 0), dim_index+1+n_around)
             for dim_index in c_unraveled_idx[1:]

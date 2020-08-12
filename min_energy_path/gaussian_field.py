@@ -19,6 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import scipy.linalg as scila
+import functools
 
 
 def transform_coords(coords, mix_params):
@@ -131,6 +132,50 @@ def gaussian_field_for_quality(coords, mix_params, point_distance, length_cutoff
     second_order_guess = (orthog1_strength - 2*mid_strength + orthog0_strength) / (point_distance * order_2_step)**2
 
     return pos0_strength, pos1_strength, mid_strength, second_order_guess, direction_length, orthog_grad_length
+
+
+def gaussian_field_for_better_quality(from_coord, to_coords, to_coord_indices, mix_params, length_cutoff):
+    directions = to_coords - from_coord
+    directions_length = scila.norm(directions, axis=0)
+
+    # filter out elements too far away
+    close_enough = directions_length <= length_cutoff
+    to_coords = to_coords[close_enough]
+    to_coord_indices = to_coord_indices[close_enough]
+    directions = directions[close_enough]
+    directions_length = directions_length[close_enough]
+
+    # find the midpoint and join all the points together
+    midpoints = (to_coords + from_coord) / 2
+
+    # get the strength of the gaussian field
+    from_strength = gaussian_field(from_coord, mix_params)[0]
+    midpoint_strengths = gaussian_field(midpoints, mix_params)
+    to_strengths = gaussian_field(to_coords, mix_params)
+
+    return directions_length, to_coord_indices, from_strength, midpoint_strengths, to_strengths
+
+
+def get_mix_params_info_decorator(n_iterations=1000, learning_rate=0.01, n_linspace=25):
+    def find_mix_info_decorator(params_function):
+        @functools.wraps(params_function)
+        def params_with_info():
+            mix_params = params_function()
+
+            # First gradient descent to the actual minima
+            minima_positions = mix_params['minima_guess']
+            for i in range(n_iterations):
+                minima_positions = minima_positions - learning_rate * gaussian_grad(minima_positions, mix_params)
+            mix_params['minima_coords'] = minima_positions
+            # Find the minima strength there
+            mix_params['min_minima_strength'] = np.min(gaussian_field(minima_positions, mix_params))
+
+            # Secondly scan the direct line between the two minima
+            line = np.linspace(*minima_positions.T, n_linspace, axis=-1)
+            mix_params['max_line_strength_diff'] = np.max(gaussian_field(line, mix_params)) - mix_params['min_minima_strength']
+            return mix_params
+        return params_with_info
+    return find_mix_info_decorator
 
 
 def plot_gaussian(mix_params):

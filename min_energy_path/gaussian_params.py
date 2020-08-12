@@ -3,8 +3,10 @@
 Specification for mix_params, a dictionary, is in gaussian_field.py
 """
 import numpy as np
+from min_energy_path.gaussian_field import get_mix_params_info_decorator
 
 
+@get_mix_params_info_decorator()
 def hashtag_blocked():
     mix_centre = np.array([[0,  2, 2,   3.5, 5.5, 6,   4.5],
                            [1,  1, -1,  0,   2,   0,   -2]])
@@ -12,11 +14,12 @@ def hashtag_blocked():
         'magnitude': np.array([-1, 1, 1.5, 0.8, 1, 0.8, -1.2]),
         'sigma': np.array([1,  1, 1,   1.5, 1, 0.5, 1]),
         'centre': mix_centre,
-        'minima_coords': mix_centre[:, [0, -1]],
+        'minima_guess': mix_centre[:, [0, -1]],
         'xbounds': (-2, 7),
         'ybounds': (-5, 4)
     }
 
+@get_mix_params_info_decorator()
 def starter():
     mix_centre = np.array([
         [0, 0],
@@ -29,11 +32,12 @@ def starter():
         'magnitude': np.array([-1, 2, 1, 1.5, -1]),
         'sigma': np.array([2, 0.5, 0.5, 0.5, 1.5]),
         'centre': mix_centre,
-        'minima_coords': mix_centre[:, [0, -1]],
+        'minima_guess': mix_centre[:, [0, -1]],
         'xbounds': (-2, 7),
         'ybounds': (-5, 4)
     }
 
+@get_mix_params_info_decorator()
 def basic3d():
     mix_centre = np.array([[0, 1, 2],
                            [0, 1, 2],
@@ -42,12 +46,13 @@ def basic3d():
         'magnitude': np.array([-1, 1, -1]),
         'sigma': np.array([1, 1.5, 1]),
         'centre': mix_centre,
-        'minima_coords': mix_centre[:, [0, -1]],
+        'minima_guess': mix_centre[:, [0, -1]],
         'xbounds': (-1, 3),
         'ybounds': (-1, 3),
         'zbounds': (-1, 3)
     }
 
+@get_mix_params_info_decorator()
 def medium3d():
     return {
         'magnitude': np.array([-1, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, -1]),
@@ -55,7 +60,7 @@ def medium3d():
         'centre': np.array([[0, 1, 1, 1, 1, 1, 1, 1, 1, 2],
                            [0, -1, -1, -1, 0, 0, 0, 1, 1, 0],
                            [0, -1, 0, 1, -1, 0, 1, -1, 0, 0]]),
-        'minima_coords': np.array([
+        'minima_guess': np.array([
             [-0.8, 0, 0],
             [2.8, 0, 0]
         ]).T,
@@ -64,6 +69,7 @@ def medium3d():
         'zbounds': (-2, 2)
     }
 
+@get_mix_params_info_decorator()
 def complex2d():
     mix_centre = np.array([
         [1, 2],
@@ -79,11 +85,12 @@ def complex2d():
         'magnitude': np.array([-1]*2 + [1]*6),
         'sigma': np.ones(8)*0.5,
         'centre': mix_centre,
-        'minima_coords': mix_centre[:, [0, 1]],
+        'minima_guess': mix_centre[:, [0, 1]],
         'xbounds': (-1, 9),
         'ybounds': (-1, 5)
     }
 
+@get_mix_params_info_decorator()
 def shallow():
     return {
         'magnitude': np.array([-20]+[-5]*3),
@@ -94,7 +101,7 @@ def shallow():
             [75, 75],
             [110, 60]
         ]).T,
-        'minima_coords': np.array([
+        'minima_guess': np.array([
             [100, 117],
             [110, 60]
         ]).T,
@@ -102,6 +109,7 @@ def shallow():
         'ybounds': (50, 150)
     }
 
+@get_mix_params_info_decorator()
 def even_simplerer():
     return {
         'magnitude': np.array([-1, 2, -1]),
@@ -111,7 +119,7 @@ def even_simplerer():
             [1, 1],
             [2, 0]
         ]).T,
-        'minima_coords': np.array([
+        'minima_guess': np.array([
             [-0.45, -0.45],
             [2.55, -0.45]
         ]).T,

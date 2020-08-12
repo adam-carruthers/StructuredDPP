@@ -62,12 +62,18 @@ def get_standard_factor(points_info, mix_params, length_cutoff,
                 # Strength score
                 # Favor lower strengths
                 # Give negative score to very positive strengths
-                - tuning_strength * (pos0_strength + mid_strength + pos1_strength) / 3,
+                - tuning_strength * (
+                    ((pos0_strength + mid_strength + pos1_strength) / 3 - mix_params['min_minima_strength'])
+                    / mix_params['max_line_strength_diff']
+                ),
                 # Strength diff quality_function
                 # Penalise going upward
                 # If pos0_strength (closer to the tail) is bigger than pos1_strength
                 # then a negative value will be added to the score
-                + tuning_strength_diff * min(0, pos1_strength - max(mid_strength, pos0_strength)),
+                + tuning_strength_diff * (
+                    min(0, pos1_strength - max(mid_strength, pos0_strength))
+                    / mix_params['max_line_strength_diff']
+                ),
                 # Gradient score
                 # Favor small tangential gradients in areas with a high second order derivative
                 # Give negative score to very large orthogonal gradient lengths
