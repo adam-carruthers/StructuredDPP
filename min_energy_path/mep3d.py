@@ -5,7 +5,7 @@ import time
 
 from min_energy_path import neb
 from min_energy_path.path_helpers import (get_standard_factor, get_good_path_start_samples, calculate_good_paths,
-                                          generate_sphere_slice_path, breakdown_good_path)
+                                          generate_path_ftree, breakdown_good_path)
 import min_energy_path.gaussian_params as mix_params
 from min_energy_path.points_sphere import create_sphere_points
 
@@ -49,7 +49,7 @@ for param_choice in [mix_params.medium3d]:#, mix_params.medium3d]:
         tuning_second_order=0,
     )
 
-    ftree = generate_sphere_slice_path(
+    ftree = generate_path_ftree(
         quality_function, POINTS_INFO,
         n_variables=N_SPANNING_GAP+1,
         n_slices_behind=1,

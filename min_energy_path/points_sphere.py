@@ -152,8 +152,9 @@ def get_nearby_sphere_indexes(center_index, n_around, points_info,
     :param min_dir_index:
         The minimum slice layer for which points can be returned
     :param max_dir_index:
-        The upper value for the slice layer for which points can be returned
-        (exclusive, if the layer is n it can only return layer n-1)
+        The upper value for the slice layer for which points can be returned.
+        Keep in mind this means layer with index max_dir_index won't be returned,
+        whereas max_dir_index-1 can be.
     :return:
         List of indices in this area
     """
@@ -170,9 +171,16 @@ def get_nearby_sphere_indexes(center_index, n_around, points_info,
 
     # Slice a grid around the center in the spherey index
     indices_to_scan = points_info['spherey_index'][
-        (slice(max(c_unraveled_idx[0]-slices_behind, min_dir_index),
-               min(c_unraveled_idx[0]+1+slices_ahead, max_dir_index)),)+
-        tuple(
+        (
+            slice(
+                max(c_unraveled_idx[0]-slices_behind, min_dir_index),
+                (
+                    c_unraveled_idx[0]+1+slices_ahead
+                    if max_dir_index is None else
+                    min(c_unraveled_idx[0]+1+slices_ahead, max_dir_index)
+                )
+            ),
+        ) + tuple(
             slice(max(dim_index-n_around, 0), dim_index+1+n_around)
             for dim_index in c_unraveled_idx[1:]
         )

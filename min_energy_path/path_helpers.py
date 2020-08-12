@@ -1,9 +1,12 @@
 import numpy as np
-from min_energy_path.gaussian_field import gaussian_field_for_quality
+
+from min_energy_path.mep_ftree import MEPFactor, MEPVariable
+from min_energy_path.gaussian_field import gaussian_field_for_quality, gaussian_field_for_better_quality
+
 from structured_dpp.factor_tree import *
 
 
-def generate_sphere_slice_path(quality_function, points_info, n_variables, n_slices_behind, n_slices_ahead):
+def generate_path_ftree(quality_function, points_info, n_variables, n_slices_behind, n_slices_ahead):
     current_var = Variable((points_info['root_index'],), name='RootVar0')
     nodes_to_add = [current_var]
     for i in range(1, n_variables):
@@ -27,6 +30,50 @@ def generate_sphere_slice_path(quality_function, points_info, n_variables, n_sli
             current_var = Variable(points_info['sphere_index'][in_slice].T,
                                    parent=transition_factor,
                                    name=f'Var{i}')
+        nodes_to_add.append(current_var)
+
+    ftree = FactorTree.create_from_connected_nodes(nodes_to_add)
+
+    return ftree
+
+
+def generate_path_ftree_better(points_info, mix_params,
+                               # Parameters relating to transition quality
+                               length_cutoff,
+                               tuning_dist, tuning_strength, tuning_strength_diff,
+                               # Parameters relating to variables and slicing
+                               n_spanning_gap, n_slices_behind=1, n_slices_ahead=2):
+    transition_qualities = generate_transition_qualities(
+        points_info, mix_params, length_cutoff, tuning_dist, tuning_strength, tuning_strength_diff, n_slices_behind,
+        n_slices_ahead
+    )
+
+    current_var = Variable((points_info['root_index'],), name='RootVar0')
+    nodes_to_add = [current_var]
+
+    for i in range(n_spanning_gap+1):
+        # Add transition factor
+        transition_factor = MEPFactor(transition_qualities, length_cutoff, n_slices_behind, n_slices_ahead, points_info,
+                                      parent=current_var, name=f'Fac{i}-{i+1}')
+        nodes_to_add.append(transition_factor)
+
+        if i == n_spanning_gap:  # Give the last variable only one possible position, the tail
+            current_var = Variable((points_info['tail_index'],),
+                                   parent=transition_factor,
+                                   name=f'TailVar{i+1}')
+        else:
+            # Sphere slice bounds
+            slice_start = max(points_info['root_dir_index']+i-n_slices_behind, 0)
+            slice_end = points_info['root_dir_index']+i+1+n_slices_ahead
+            slice_of_dir = points_info['dir_component'][
+                slice_start:slice_end
+            ]
+            in_slice = (np.min(slice_of_dir) <= points_info['sphere_before'][0, :]) & (points_info['sphere_before'][0, :] <= np.max(slice_of_dir))
+
+            current_var = MEPVariable(points_info['sphere_index'][in_slice].T,
+                                      slice_start, slice_end,
+                                      parent=transition_factor,
+                                      name=f'Var{i+1}')
         nodes_to_add.append(current_var)
 
     ftree = FactorTree.create_from_connected_nodes(nodes_to_add)
@@ -148,3 +195,53 @@ Dist, Strength, Strength Diff, Grad, Second Order
         else:
             print(node, points_info['sphere'][:, good_path['assignment'][node]])
     print('Overall', total)
+
+
+def generate_transition_qualities(points_info, mix_params,
+                                  # Parameters for the quality
+                                  length_cutoff,
+                                  tuning_dist, tuning_strength, tuning_strength_diff,  # not doing grad qualities
+                                  # Parameters for the path variables
+                                  n_slices_behind, n_slices_ahead):
+    # Step 1 - Work out all the possible transition qualities
+    # First, we work out which variables we need to calculate transitions from
+    min_dir_index = max(points_info['root_dir_index']-n_slices_behind, 0)
+    max_dir_index = points_info['tail_dir_index']+1+n_slices_ahead
+    to_calculate_from = points_info['spherey_index'][min_dir_index:max_dir_index, ...]
+
+    # Then actually calculate, for each "from" point, the quality to each possible "to" point
+    # from is rootwards, to is leafwards
+    # transition_qualities[rootwards][leafwards]
+    transition_qualities = {}
+
+    for from_pos, fromm in np.ndenumerate(to_calculate_from):
+        if fromm == -1:
+            continue
+        to_slices_behind = from_pos[0] - n_slices_behind - n_slices_ahead + 1
+        to_slices_ahead = from_pos[0] + n_slices_behind + n_slices_ahead + 1
+        to_calculate_idx = points_info['spherey_index'][
+            (slice(max(to_slices_behind, min_dir_index), min(to_slices_ahead, max_dir_index)),) +
+            tuple(
+                slice(from_dim_pos-length_cutoff, from_dim_pos+1+length_cutoff)
+                for from_dim_pos in from_pos[1:]
+            )
+        ]
+        to_calculate_idx = to_calculate_idx[~np.isin(to_calculate_idx, [-1, fromm])]
+        directions_length, to_calculate_idx, from_strength, midpoint_strengths, to_strengths = gaussian_field_for_better_quality(
+            points_info['sphere'][:, [fromm]], points_info['sphere'][:, to_calculate_idx], to_calculate_idx,
+            mix_params, length_cutoff
+        )
+        to_qualities = (
+            tuning_dist * directions_length
+            - tuning_strength * (
+                ((midpoint_strengths + to_strengths) / 2 - mix_params['min_minima_strength'])
+                / mix_params['max_line_strength_diff']
+            )
+            - tuning_strength_diff * (
+                np.maximum(np.maximum(midpoint_strengths, to_strengths) - from_strength, 0)
+                / mix_params['max_line_strength_diff']
+            )
+        )
+        transition_qualities[fromm] = dict(zip(to_calculate_idx, to_qualities))
+
+    return transition_qualities

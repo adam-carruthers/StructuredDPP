@@ -7,7 +7,7 @@ from min_energy_path.gaussian_field import plot_gaussian
 import min_energy_path.gaussian_params as mix_params
 from min_energy_path.points_sphere import create_sphere_points
 from min_energy_path.path_helpers import (get_standard_factor, get_good_path_start_samples, calculate_good_paths,
-                                          breakdown_good_path, generate_sphere_slice_path)
+                                          breakdown_good_path, generate_path_ftree_better)
 from min_energy_path import neb
 
 start_time = time.time()
@@ -22,25 +22,13 @@ for param_choice in [mix_params.even_simplerer]:  # , mix_params.starter, mix_pa
 
     POINTS_INFO = create_sphere_points(MIX_PARAMS['minima_coords'], N_SPANNING_GAP)
 
-    # # Plot the space we're exploring
-    # plot_gaussian(MIX_MAG, MIX_SIG, MIX_CENTRE, XBOUNDS, YBOUNDS)
-    # plot_scatter_with_minima(SPHERE, MINIMA_COORDS, plt)
-
-
-    quality_function = get_standard_factor(
-        points_info=POINTS_INFO,
-        mix_params=MIX_PARAMS,
-        length_cutoff=4,
-        tuning_dist=.01,
+    ftree = generate_path_ftree_better(
+        POINTS_INFO, MIX_PARAMS,
+        length_cutoff=3,
+        tuning_dist=0.02,
         tuning_strength=1,
-        tuning_strength_diff=2,
-        tuning_grad=0,
-        tuning_second_order=0,
-    )
-
-    ftree = generate_sphere_slice_path(
-        quality_function, POINTS_INFO,
-        n_variables=N_SPANNING_GAP+1,
+        tuning_strength_diff=1.5,
+        n_spanning_gap=N_SPANNING_GAP,
         n_slices_behind=1,
         n_slices_ahead=2
     )
@@ -64,6 +52,7 @@ for param_choice in [mix_params.even_simplerer]:  # , mix_params.starter, mix_pa
     plot_gaussian(MIX_PARAMS)
 
     for i, path_info in enumerate(good_paths_info):
+        print(i, path_info['value'])
         lines = plt.plot(*path_info['path'], label=f'q{i}={path_info["value"]}')
         neb_path_1 = neb.neb_mep(path_info, POINTS_INFO, MIX_PARAMS, k=2., n_iterations=10000)
         plt.plot(*neb_path_1, c=lines[0].get_color(), dashes=(2, 2))

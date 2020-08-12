@@ -140,9 +140,9 @@ def gaussian_field_for_better_quality(from_coord, to_coords, to_coord_indices, m
 
     # filter out elements too far away
     close_enough = directions_length <= length_cutoff
-    to_coords = to_coords[close_enough]
+    to_coords = to_coords[:, close_enough]
     to_coord_indices = to_coord_indices[close_enough]
-    directions = directions[close_enough]
+    directions = directions[:, close_enough]
     directions_length = directions_length[close_enough]
 
     # find the midpoint and join all the points together
