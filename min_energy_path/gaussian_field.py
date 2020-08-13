@@ -134,15 +134,16 @@ def gaussian_field_for_quality(coords, mix_params, point_distance, length_cutoff
     return pos0_strength, pos1_strength, mid_strength, second_order_guess, direction_length, orthog_grad_length
 
 
-def gaussian_field_for_better_quality(from_coord, to_coords, to_coord_indices, mix_params, length_cutoff):
+def gaussian_field_for_better_quality(from_coord, to_coords, to_coord_indices, mix_params, length_cutoff,
+                                      point_distance):
     directions = to_coords - from_coord
     directions_length = scila.norm(directions, axis=0)
 
     # filter out elements too far away
-    close_enough = directions_length <= length_cutoff
+    close_enough = directions_length / point_distance <= length_cutoff
     to_coords = to_coords[:, close_enough]
     to_coord_indices = to_coord_indices[close_enough]
-    directions = directions[:, close_enough]
+
     directions_length = directions_length[close_enough]
 
     # find the midpoint and join all the points together

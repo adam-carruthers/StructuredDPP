@@ -1,9 +1,28 @@
-from functools import reduce
-
 from structured_dpp.factor_tree import Factor, MaxProductRun, Variable
 from structured_dpp.semiring import MaxProductValue
 
 from min_energy_path.points_sphere import get_nearby_sphere_indexes
+
+
+def for_debugging_plot(from_possible_values, fromm, to, value_of_to, factor):
+    # for_debugging_plot(from_possible_values, fromm, to, value_of_to, self)
+    import matplotlib.pyplot as plt
+
+    plt.scatter(*factor.points_info['sphere'], c='b')
+    plt.scatter(*factor.points_info['sphere'][:, fromm.allowed_values], c='g')
+    plt.scatter(*factor.points_info['sphere'][:, [value_of_to]], c='r')
+    plt.scatter(*factor.points_info['sphere'][:, from_possible_values], c='k')
+
+    assignment_weights_gt_0 = [
+        value_of_from
+        for value_of_from in from_possible_values
+        if (
+            factor.transition_qualities[value_of_to].get(value_of_from, 0)
+            if to == factor.parent else
+            factor.transition_qualities[value_of_from].get(value_of_to, 0)
+        ) > 0
+    ]
+    plt.scatter(*factor.points_info['sphere'][:, assignment_weights_gt_0], c='y')
 
 
 class MEPFactor(Factor):

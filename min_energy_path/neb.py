@@ -86,7 +86,7 @@ def neb(path_guess, mix_params, n_iterations=3000, k=1., time_step=1.e-2):
                 tip[:, at_critical & (~next_next_bigger)]*delta_e_min[np.newaxis, ~next_next_bigger[at_critical]] +
                 tim[:, at_critical & (~next_next_bigger)]*delta_e_max[np.newaxis, ~next_next_bigger[at_critical]]
         )
-        tangents /= scila.norm(tangents, axis=0, keepdims=True)
+        tangents /= scila.norm(tangents, axis=0, keepdims=True)  # TODO: What if two points land on each other?
 
         # Calculate the distance between the points
         transitions = path[:, 1:] - path[:, :-1]

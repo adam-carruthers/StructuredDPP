@@ -4,8 +4,9 @@ from mpl_toolkits.mplot3d import Axes3D
 import time
 
 from min_energy_path import neb
-from min_energy_path.path_helpers import (get_standard_factor, get_good_path_start_samples, calculate_good_paths,
-                                          generate_path_ftree, breakdown_good_path)
+from min_energy_path.path_helpers import (get_standard_transition_quality_function, get_good_path_start_samples,
+                                          calculate_good_paths,
+                                          generate_path_ftree, breakdown_good_path, generate_path_ftree_better)
 import min_energy_path.gaussian_params as mix_params
 from min_energy_path.points_sphere import create_sphere_points
 
@@ -14,7 +15,6 @@ start_time = time.time()
 
 # First set up some constants we're going to need
 N_SPANNING_GAP = 7
-N_VARIABLES = N_SPANNING_GAP + 1
 
 for param_choice in [mix_params.medium3d]:#, mix_params.medium3d]:
     # Constants relating to the gaussian field
@@ -27,34 +27,35 @@ for param_choice in [mix_params.medium3d]:#, mix_params.medium3d]:
     # ax = fig.add_subplot(111, projection='3d')
     # plot_scatter_with_minima(SPHERE, MINIMA_COORDS, ax)
 
-    # quality_function = get_standard_factor(
+    # quality_function = get_standard_transition_quality_function(
     #     points_info=POINTS_INFO,
     #     mix_params=MIX_PARAMS,
     #     length_cutoff=4,
-    #     tuning_dist=.25,
-    #     tuning_strength=1.5,
-    #     tuning_strength_diff=1,
-    #     tuning_grad=0.5,
-    #     tuning_second_order=1/47
+    #     tuning_dist=0.01,
+    #     tuning_strength=1,
+    #     tuning_strength_diff=2,
+    #     tuning_grad=0,
+    #     tuning_second_order=0
     # )
-
-    quality_function = get_standard_factor(
-        points_info=POINTS_INFO,
-        mix_params=MIX_PARAMS,
+    #
+    # ftree = generate_path_ftree(
+    #     quality_function, POINTS_INFO,
+    #     n_spanning_gap=N_SPANNING_GAP,
+    #     n_slices_behind=1,
+    #     n_slices_ahead=2
+    # )
+    
+    ftree = generate_path_ftree_better(
+        POINTS_INFO, MIX_PARAMS,
         length_cutoff=4,
-        tuning_dist=.01,
+        tuning_dist=0.01,
         tuning_strength=1,
         tuning_strength_diff=2,
-        tuning_grad=0,
-        tuning_second_order=0,
-    )
-
-    ftree = generate_path_ftree(
-        quality_function, POINTS_INFO,
-        n_variables=N_SPANNING_GAP+1,
+        n_spanning_gap=N_SPANNING_GAP,
         n_slices_behind=1,
         n_slices_ahead=2
     )
+
 
     vars = list(ftree.get_variables())
     var_middle = vars[len(vars) // 2]
@@ -83,11 +84,14 @@ for param_choice in [mix_params.medium3d]:#, mix_params.medium3d]:
     for i, path_info in enumerate(best_paths_info):
         lines = ax.plot(*path_info['path'], label=f'{i}')
         print(i, path_info['value'])
-        neb_path = neb.neb_mep(path_info, POINTS_INFO, MIX_PARAMS, n_iterations=5000)
-        plt.plot(*neb_path, c=lines[0].get_color(), dashes=(2, 2))
+        # neb_path = neb.neb_mep(path_info, POINTS_INFO, MIX_PARAMS, n_iterations=5000)
+        # plt.plot(*neb_path, c=lines[0].get_color(), dashes=(2, 2))
 
 
     plt.legend()
     plt.show()
 
-#breakdown_good_path(good_paths_info[3], ftree, quality_function, POINTS_INFO)
+# breakdown_good_path(best_paths_info[0], ftree, quality_function, POINTS_INFO)
+
+# fact2 = next(iter(ftree.get_factors()))
+# t_quals = fact2.transition_qualities

@@ -6,20 +6,20 @@ from min_energy_path.gaussian_field import gaussian_field_for_quality, gaussian_
 from structured_dpp.factor_tree import *
 
 
-def generate_path_ftree(quality_function, points_info, n_variables, n_slices_behind, n_slices_ahead):
+def generate_path_ftree(quality_function, points_info, n_spanning_gap, n_slices_behind, n_slices_ahead):
     current_var = Variable((points_info['root_index'],), name='RootVar0')
     nodes_to_add = [current_var]
-    for i in range(1, n_variables):
+    for i in range(n_spanning_gap+1):
         # Add transition factor
         transition_factor = Factor(quality_function,
                                    parent=current_var,
-                                   name=f'Fac{i-1}-{i}')
+                                   name=f'Fac{i}-{i+1}')
         nodes_to_add.append(transition_factor)
 
-        if i == n_variables - 1:  # Give the last variable only one possible position, the tail
+        if i == n_spanning_gap:  # Give the last variable only one possible position, the tail
             current_var = Variable((points_info['tail_index'],),
                                    parent=transition_factor,
-                                   name=f'TailVar{i}')
+                                   name=f'TailVar{i+1}')
         else:
             # Sphere slice bounds
             slice_of_dir = points_info['dir_component'][
@@ -29,7 +29,7 @@ def generate_path_ftree(quality_function, points_info, n_variables, n_slices_beh
 
             current_var = Variable(points_info['sphere_index'][in_slice].T,
                                    parent=transition_factor,
-                                   name=f'Var{i}')
+                                   name=f'Var{i+1}')
         nodes_to_add.append(current_var)
 
     ftree = FactorTree.create_from_connected_nodes(nodes_to_add)
@@ -81,9 +81,9 @@ def generate_path_ftree_better(points_info, mix_params,
     return ftree
 
 
-def get_standard_factor(points_info, mix_params, length_cutoff,
-                        tuning_dist, tuning_strength, tuning_strength_diff, tuning_grad, tuning_second_order,
-                        order_2_step=0.2):
+def get_standard_transition_quality_function(points_info, mix_params, length_cutoff,
+                                             tuning_dist, tuning_strength, tuning_strength_diff, tuning_grad, tuning_second_order,
+                                             order_2_step=0.2):
     """
     Returns the factor quality_function function given the input parameters.
     """
@@ -110,7 +110,7 @@ def get_standard_factor(points_info, mix_params, length_cutoff,
                 # Favor lower strengths
                 # Give negative score to very positive strengths
                 - tuning_strength * (
-                    ((pos0_strength + mid_strength + pos1_strength) / 3 - mix_params['min_minima_strength'])
+                    ((pos0_strength + mid_strength) / 2 - mix_params['min_minima_strength'])
                     / mix_params['max_line_strength_diff']
                 ),
                 # Strength diff quality_function
@@ -190,10 +190,11 @@ Dist, Strength, Strength Diff, Grad, Second Order
     for node in ftree.get_nodes():
         if isinstance(node, Factor):
             quality_breakdown = quality_function(node, good_path['assignment'], return_breakdown=True)
-            print(node, quality_breakdown)
+            quality = np.exp(np.sum(quality_breakdown))
+            print(node, quality_breakdown, quality)
             total = [x+y for x,y in zip(total, quality_breakdown)]
         else:
-            print(node, points_info['sphere'][:, good_path['assignment'][node]])
+            print(node, good_path['assignment'][node], points_info['sphere'][:, good_path['assignment'][node]])
     print('Overall', total)
 
 
@@ -218,21 +219,22 @@ def generate_transition_qualities(points_info, mix_params,
         if fromm == -1:
             continue
         to_slices_behind = from_pos[0] - n_slices_behind - n_slices_ahead + 1
-        to_slices_ahead = from_pos[0] + n_slices_behind + n_slices_ahead + 1
+        to_slices_ahead = from_pos[0] + n_slices_behind + n_slices_ahead + 2
         to_calculate_idx = points_info['spherey_index'][
             (slice(max(to_slices_behind, min_dir_index), min(to_slices_ahead, max_dir_index)),) +
             tuple(
-                slice(from_dim_pos-length_cutoff, from_dim_pos+1+length_cutoff)
+                slice(max(from_dim_pos-length_cutoff, 0), from_dim_pos+1+length_cutoff)
                 for from_dim_pos in from_pos[1:]
             )
         ]
         to_calculate_idx = to_calculate_idx[~np.isin(to_calculate_idx, [-1, fromm])]
-        directions_length, to_calculate_idx, from_strength, midpoint_strengths, to_strengths = gaussian_field_for_better_quality(
-            points_info['sphere'][:, [fromm]], points_info['sphere'][:, to_calculate_idx], to_calculate_idx,
-            mix_params, length_cutoff
-        )
-        to_qualities = (
-            tuning_dist * directions_length
+        directions_length, to_calculate_idx, from_strength, midpoint_strengths, to_strengths = \
+            gaussian_field_for_better_quality(
+                points_info['sphere'][:, [fromm]], points_info['sphere'][:, to_calculate_idx], to_calculate_idx,
+                mix_params, length_cutoff, points_info['point_distance']
+            )
+        to_qualities = np.exp(
+            - tuning_dist * directions_length / points_info['point_distance']
             - tuning_strength * (
                 ((midpoint_strengths + to_strengths) / 2 - mix_params['min_minima_strength'])
                 / mix_params['max_line_strength_diff']
