@@ -218,8 +218,8 @@ def generate_transition_qualities(points_info, mix_params,
     for from_pos, fromm in np.ndenumerate(to_calculate_from):
         if fromm == -1:
             continue
-        to_slices_behind = from_pos[0] - n_slices_behind - n_slices_ahead + 1
-        to_slices_ahead = from_pos[0] + n_slices_behind + n_slices_ahead + 2
+        to_slices_behind = min_dir_index + from_pos[0] - n_slices_behind - n_slices_ahead + 1
+        to_slices_ahead = min_dir_index + from_pos[0] + n_slices_behind + n_slices_ahead + 2
         to_calculate_idx = points_info['spherey_index'][
             (slice(max(to_slices_behind, min_dir_index), min(to_slices_ahead, max_dir_index)),) +
             tuple(
