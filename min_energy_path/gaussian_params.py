@@ -127,8 +127,28 @@ def even_simplerer():
         'ybounds': (-3, 3)
     }
 
+@get_mix_params_info_decorator()
+def randomly_generated(n_dims, n_maximas):
+    return {
+        'magnitude': np.array([-1, -1] + [1]*n_maximas),
+        'sigma': np.array([0.2]*(n_maximas+2)),
+        'centre': np.array([
+            [-0.1]*n_dims,
+            [1.1]*n_dims
+        ] + np.random.random((n_maximas, n_dims)).tolist()).T,
+        'minima_guess': np.array([
+            [-0.1]*n_dims,
+            [1.1]*n_dims
+        ]).T,
+        'xbounds': (-1, 2),
+        'ybounds': (-1, 2),
+        'zbounds': (-1, 2)
+    }
+
 if __name__ == '__main__':
     # Quick code to see what a 2D path looks like
     from min_energy_path.gaussian_field import plot_gaussian
-    gaussian_params = shallow()
-    plot_gaussian(gaussian_params)
+    import matplotlib.pyplot as plt
+    mix_params = randomly_generated(2, 4)
+    plot_gaussian(mix_params)
+    plt.plot(*mix_params['minima_coords'], 'r-')

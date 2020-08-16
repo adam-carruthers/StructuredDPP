@@ -160,8 +160,8 @@ def gaussian_field_for_better_quality(from_coord, to_coords, to_coord_indices, m
 def get_mix_params_info_decorator(n_iterations=1000, learning_rate=0.01, n_linspace=25):
     def find_mix_info_decorator(params_function):
         @functools.wraps(params_function)
-        def params_with_info():
-            mix_params = params_function()
+        def params_with_info(*args):
+            mix_params = params_function(*args)
 
             # First gradient descent to the actual minima
             minima_positions = mix_params['minima_guess']
