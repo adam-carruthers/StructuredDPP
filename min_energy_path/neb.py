@@ -141,10 +141,24 @@ def neb_mep(mepath_info, points_info, mix_params, n_spanning_point_gap=3, n_iter
     path_indexes = mepath_info['path_indexes']
     while i < len(path_indexes):
         new_path_points.append(i)
+        # Check no next point goes through the same point
         for j in range(i+1, len(path_indexes)):
             if path_indexes[i] == path_indexes[j]:
                 i = j  # Set i to j, skipping points in between
-        i += 1
+        if i == len(path_indexes) - 2:
+            i += 1
+            continue
+        if i == len(path_indexes) - 1:
+            break
+        # Check the next point doesn't go through the same point in the opposite direction
+        next_dir = mepath_info['path'][:, i+1] - mepath_info['path'][:, i]
+        next_dir /= scila.norm(next_dir)
+        next_next_dir = mepath_info['path'][:, i+2] - mepath_info['path'][:, i+1]
+        next_next_dir /= scila.norm(next_next_dir)
+        if np.allclose(next_dir, next_next_dir) or np.allclose(next_dir, -next_next_dir):
+            i += 2
+        else:
+            i += 1
 
     new_mep_path = mepath_info['path'][:, new_path_points]
 
