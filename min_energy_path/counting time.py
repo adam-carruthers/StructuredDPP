@@ -42,20 +42,20 @@ def generate_transition_qualities(points_info,
 
 
 if __name__ == '__main__':
-    x = np.arange(2, 9)
+    x = np.arange(1, 6)
     y_sphere_points = []
     y_transitions = []
-    for dim in x:
-        print(dim)
-        points_info = create_sphere_points(np.array([[0, 1]] + [[0, 0]]*(dim-1)), 4, 0.7, 1)
+    points_info = create_sphere_points(np.array([[0, 1]] + [[0, 0]] * 2), 15, 0.7, 1)
+    for cutoff in x:
+        print(cutoff)
         y_sphere_points.append(points_info['sphere'].shape[1])
-        n_transitions, n_from = generate_transition_qualities(points_info, 3, 1, 1)
+        n_transitions, n_from = generate_transition_qualities(points_info, cutoff, 1, 2)
         y_transitions.append(n_transitions)
 
     fig, ax1 = plt.subplots()
 
-    ax1.set_title('Changing dimensions')
-    ax1.set_xlabel('dimensions')
+    ax1.set_title('Changing length_cutoff')
+    ax1.set_xlabel('n_slices_ahead')
     ax1.set_ylabel('Calls of field strength function', c='r')
     ax1.plot(x, y_transitions, c='r')
     ax1.tick_params(axis='y', labelcolor='r')
