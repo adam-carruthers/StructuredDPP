@@ -3,6 +3,10 @@ import scipy.linalg as scila
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import warnings
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def create_sphere_basis(minima):
@@ -37,6 +41,8 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
         The extent to which the sphere will be shrunk in all axis except the one in the direction of the minima
     :return:
     """
+    logger.info('Creating sphere points')
+
     # Useful quantities
     # Get quantities relating to the position of the minima and the vector between them
     dimensions = minima.shape[0]
@@ -75,6 +81,8 @@ def create_sphere_points(minima, n_spanning_gap, gap_proportion=0.7, shrink_in_d
 
     basis = create_sphere_basis(minima)
     sphere = first_point_pos[:, np.newaxis] + basis @ sphere_before
+
+    logger.info(f'Sphere has {sphere.shape[1]} points')
 
     # Find the minima indices
     root_index, tail_index = None, None

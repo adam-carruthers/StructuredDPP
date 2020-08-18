@@ -1,9 +1,13 @@
 import numpy as np
+import logging
 
 from min_energy_path.mep_ftree import MEPFactor, MEPVariable
 from min_energy_path.gaussian_field import gaussian_field_for_quality, gaussian_field_for_better_quality
 
 from structured_dpp.factor_tree import *
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_path_ftree(quality_function, points_info, n_spanning_gap, n_slices_behind, n_slices_ahead):
@@ -148,7 +152,7 @@ def get_good_path_start_samples(var, run, points_info, n_per_group=3):
     sample = {}
     for idx in var.allowed_values:
         group = tuple(points_info['sphere_before'][1:, idx] / points_info['point_distance'] // n_per_group)
-        value = var.outgoing_messages[run][None][idx]
+        value = var.outgoing_messages[run][None][idx].v
         route_before = sample.get(group, None)
         if route_before is None or value > route_before[1]:
             sample[group] = (idx, value)
@@ -204,6 +208,8 @@ def generate_transition_qualities(points_info, mix_params,
                                   tuning_dist, tuning_strength, tuning_strength_diff,  # not doing grad qualities
                                   # Parameters for the path variables
                                   n_slices_behind, n_slices_ahead):
+    logger.info('Starting to generate transition qualities')
+
     # Step 1 - Work out all the possible transition qualities
     # First, we work out which variables we need to calculate transitions from
     min_dir_index = max(points_info['root_dir_index']-n_slices_behind, 0)

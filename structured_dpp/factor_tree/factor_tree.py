@@ -192,11 +192,13 @@ class FactorTree:
                 return traversal
 
     def run_forward_pass_from_traversal(self, traversal, run=None):
+        logger.info(f'Starting forward pass on run {run}')
         node: Node
         for node, node_above in reversed(traversal[1:]):
             node.create_all_messages_to(node_above, run)
 
     def run_backward_pass_from_traversal(self, traversal, run=None):
+        logger.info(f'Starting backward pass on run {run}')
         node: Node
         node_above: Node
         for node, node_above in traversal[1:]:
@@ -224,7 +226,8 @@ class FactorTree:
         return assignments
 
     def get_max_quality(self, start_node=None, run_uid=None):
+        start_node = start_node if start_node is not None else self.root
         traversal, run = self.run_max_quality_forward(start_node, run_uid)
         root_max_m, root_max_m_assignment = start_node.calculate_max_message_assignment(run)
-        logger.info(f'Max path has quality_function {root_max_m}, starting assigning')
+        logger.info(f'Max path has quality {root_max_m}, starting assigning')
         return self.get_max_from_start_assignment(start_node, root_max_m_assignment, traversal, run)

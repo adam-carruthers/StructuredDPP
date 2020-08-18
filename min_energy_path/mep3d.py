@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 # noinspection PyUnresolvedReferences
 from mpl_toolkits.mplot3d import Axes3D
 import time
+import logging
 
 from min_energy_path import neb
 from min_energy_path.path_helpers import (get_standard_transition_quality_function, get_good_path_start_samples,
@@ -9,6 +10,9 @@ from min_energy_path.path_helpers import (get_standard_transition_quality_functi
                                           generate_path_ftree, breakdown_good_path, generate_path_ftree_better)
 import min_energy_path.gaussian_params as mix_params
 from min_energy_path.points_sphere import create_sphere_points
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 start_time = time.time()

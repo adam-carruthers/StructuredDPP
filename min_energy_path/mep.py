@@ -16,7 +16,7 @@ start_time = time.time()
 N_SPANNING_GAP = 10
 N_VARIABLES = N_SPANNING_GAP + 2
 
-for param_choice in [mix_params.hashtag_blocked]:  # , mix_params.starter, mix_params.complex2d, mix_params.hashtag_blocked, mix_params.even_simplerer]:
+for param_choice in [mix_params.starter]:  # , mix_params.starter, mix_params.complex2d, mix_params.hashtag_blocked, mix_params.even_simplerer]:
     # Constants relating to the gaussian field
     MIX_PARAMS = param_choice()
 
@@ -54,8 +54,8 @@ for param_choice in [mix_params.hashtag_blocked]:  # , mix_params.starter, mix_p
     for i, path_info in enumerate(good_paths_info):
         print(i, path_info['value'])
         lines = plt.plot(*path_info['path'], label=f'q{i}={path_info["value"]}')
-        # neb_path_1 = neb.neb_mep(path_info, POINTS_INFO, MIX_PARAMS, k=2., n_iterations=10000)
-        # plt.plot(*neb_path_1, c=lines[0].get_color(), dashes=(2, 2))
+        neb_path_1 = neb.neb_mep(path_info, POINTS_INFO, MIX_PARAMS, k=2., n_iterations=10000)
+        plt.plot(*neb_path_1, c=lines[0].get_color(), dashes=(2, 2))
 
     # Get the NEB smoothed best path
 
