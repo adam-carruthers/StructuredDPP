@@ -23,19 +23,23 @@ def plot_paths_and_tangents(path, tangent, scale=5, width=0.025):
     plt.show()
 
 
-def neb(path_guess, mix_params, n_iterations=3000, k=1., time_step=1.e-2):
+def neb(path_guess, mix_params, force_cutoff=10**-5, n_max_iterations=8000, k=1., time_step=1.e-2, return_force_history=False):
     """
     Performs the NEB algorithm
     :param np.ndarray path_guess:
         Matrix (d dimensions, n points) of the points on the initial path guess
     :param mix_params:
         The generated dictionary of gaussian mix params
-    :param n_iterations:
+    :param force_cutoff:
+        If the force's L2 norm is below this cutoff then the path quits
+    :param n_max_iterations:
         Number of iterations to perform on the path
     :param k:
         The spring force component
     :param time_step:
         The size of the step to take during an interation
+    :param return_force_history:
+        If True returns the force L2 norm for each iteration
     :return:
     """
     logger.info('Starting neb run')
@@ -45,9 +49,11 @@ def neb(path_guess, mix_params, n_iterations=3000, k=1., time_step=1.e-2):
     velocity = np.zeros((path.shape[0], path.shape[1]-2))
     old_force = np.zeros_like(velocity)
 
+    force_history = []
+
     tangents = np.zeros((path.shape[0], path.shape[1]-2))
 
-    for i in range(n_iterations):
+    for i in range(n_max_iterations):
         # Calculate the energy at each point
         coords_transformed = gf.transform_coords(path, mix_params)
         field_strength = gf._field_strength(coords_transformed, mix_params)
@@ -101,6 +107,14 @@ def neb(path_guess, mix_params, n_iterations=3000, k=1., time_step=1.e-2):
 
         # Apply forces using gradient
         force = spring_component - orth_grad_component
+        force_l2 = scila.norm(force)
+        force_history.append(force_l2)
+        if force_l2 < force_cutoff:
+            logger.info(f'Finished NEB from force cutoff after {i+1} iterations')
+            if return_force_history:
+                return path, force_history
+            return path
+
         force_velocity = velocity * force
         if np.sum(force_velocity) > 0:
             velocity = force_velocity * force / scila.norm(force)**2
@@ -112,10 +126,14 @@ def neb(path_guess, mix_params, n_iterations=3000, k=1., time_step=1.e-2):
 
         old_force = force
 
+    logger.info(f'Finished NEB from max_iterations after {n_max_iterations} iterations')
+
+    if return_force_history:
+        return path, force_history
     return path
 
 
-def neb_mep(mepath_info, points_info, mix_params, n_spanning_point_gap=3, n_iterations=3000, k=1., time_step=1.e-2):
+def neb_mep(mepath_info, points_info, mix_params, n_spanning_point_gap=3, force_cutoff=1e-6, n_max_iterations=3000, k=1., time_step=1.e-2):
     """
     Performs the NEB algorithm on the MEP generated path
     :param mepath_info:
@@ -126,7 +144,9 @@ def neb_mep(mepath_info, points_info, mix_params, n_spanning_point_gap=3, n_iter
         The number of NEB points to span the MEP point gap
     :param mix_params:
         The generated dictionary of gaussian mix params
-    :param n_iterations:
+    :param force_cutoff:
+        If the force's L2 norm is below this cutoff then the path quits
+    :param n_max_iterations:
         Number of iterations to perform on the path
     :param k:
         The spring force component
@@ -174,18 +194,28 @@ def neb_mep(mepath_info, points_info, mix_params, n_spanning_point_gap=3, n_iter
 
     neb_start_path = np.concatenate(neb_start_path, axis=1)
 
-    return neb(neb_start_path, mix_params, n_iterations, k, time_step)
+    return neb(neb_start_path, mix_params, force_cutoff, n_max_iterations, k, time_step)
 
 
 if __name__ == '__main__':
-    from min_energy_path.gaussian_params import even_simplerer
+    from min_energy_path import gaussian_params
     from min_energy_path.gaussian_field import plot_gaussian
     import matplotlib.pyplot as plt
 
-    _mix_params = even_simplerer()
+    logging.basicConfig(level=logging.INFO)
+
+    _mix_params = gaussian_params.starter()
     old_path = np.linspace(_mix_params['minima_coords'][:, 0], _mix_params['minima_coords'][:, 1], 15, axis=-1)
-    new_path = neb(old_path, _mix_params)
+    new_path, force_history = neb(old_path, _mix_params, n_max_iterations=10**5, return_force_history=True)
 
     plot_gaussian(_mix_params)
     plt.plot(*old_path, 'bo-')
     plt.plot(*new_path, 'ro-')
+    plt.show()
+
+    fig, ax = plt.subplots()
+    ax.semilogy(force_history)
+    ax.set_xlabel('Iterations')
+    ax.set_ylabel('Frob norm of force')
+    ax.set_title('NEB change of force over iterations')
+    fig.show()

@@ -233,8 +233,10 @@ def generate_transition_qualities(points_info, mix_params,
                 for from_dim_pos in from_pos[1:]
             )
         ]
-        to_calculate_idx = to_calculate_idx[~np.isin(to_calculate_idx, [-1, fromm])]
-        directions_length, to_calculate_idx, from_strength, midpoint_strengths, to_strengths = \
+        out = np.zeros_like(to_calculate_idx)
+        mask = ~np.isin(to_calculate_idx, [-1, fromm])
+        to_calculate_idx = to_calculate_idx[mask]
+        directions_length, to_calculate_idx, from_strength, midpoint_strengths, to_strengths, close_enough = \
             gaussian_field_for_better_quality(
                 points_info['sphere'][:, [fromm]], points_info['sphere'][:, to_calculate_idx], to_calculate_idx,
                 mix_params, length_cutoff, points_info['point_distance']
@@ -250,6 +252,8 @@ def generate_transition_qualities(points_info, mix_params,
                 / mix_params['max_line_strength_diff']
             )
         )
+        mask[mask] = close_enough
+        out[mask] = to_qualities
         transition_qualities[fromm] = dict(zip(to_calculate_idx, to_qualities))
 
     return transition_qualities

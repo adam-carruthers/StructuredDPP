@@ -16,8 +16,6 @@ Specification for mix_params, a dictionary
     Vector or tuple [lower bound, upper bound] - Optional
 """
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
 import scipy.linalg as scila
 import functools
 
@@ -154,7 +152,7 @@ def gaussian_field_for_better_quality(from_coord, to_coords, to_coord_indices, m
     midpoint_strengths = gaussian_field(midpoints, mix_params)
     to_strengths = gaussian_field(to_coords, mix_params)
 
-    return directions_length, to_coord_indices, from_strength, midpoint_strengths, to_strengths
+    return directions_length, to_coord_indices, from_strength, midpoint_strengths, to_strengths, close_enough
 
 
 def get_mix_params_info_decorator(n_iterations=1000, learning_rate=0.01, n_linspace=25):
@@ -181,6 +179,8 @@ def get_mix_params_info_decorator(n_iterations=1000, learning_rate=0.01, n_linsp
 
 
 def plot_gaussian(mix_params):
+    import matplotlib.pyplot as plt
+    import matplotlib as mpl
     # Plot the scalar field
     # First create an x, y grid
     x = np.linspace(*mix_params['xbounds'], 100)
@@ -205,17 +205,3 @@ def plot_gaussian(mix_params):
     plt.pcolormesh(x_grid, y_grid, z_grid, cmap=cmap)
     fig.colorbar(sm)
     ax.axis('equal')
-
-
-def get_gaussian_slice(xstep, ystep, zstep, basis, mix_params):
-    x = np.arange(*xbounds, xstep)
-    y = np.arange(*ybounds, ystep)
-    z = np.arange(*zbounds, zstep)
-    X, Y, Z = np.meshgrid(x, y, z)
-    coords = np.array([X.flatten(), Y.flatten(), Z.flatten])
-    F = gaussian_field(basis @ coords, mix_mag, mix_sig, mix_centre).reshape(X.shape)
-    # This function is unfinished
-    # It aims to animate a field in 3D
-
-
-

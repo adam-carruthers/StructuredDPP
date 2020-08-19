@@ -1,7 +1,5 @@
 import numpy as np
 import scipy.linalg as scila
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import warnings
 import logging
 
@@ -193,16 +191,19 @@ def get_nearby_sphere_indexes(center_index, n_around, points_info,
             for dim_index in c_unraveled_idx[1:]
         )
     ]
-    return [
-        sphere_index
-        for sphere_index in indices_to_scan.flatten()
-        if sphere_index >= 0
-        and (return_center or sphere_index != center_index)
-        and (return_lower or sphere_index >= center_index)
-    ]
+    if return_lower and not return_center:
+        return indices_to_scan[~np.isin(indices_to_scan, [-1, center_index])]
+    if return_lower and return_center:
+        return indices_to_scan[indices_to_scan >= 0]
+    if not return_lower and return_center:
+        return indices_to_scan[indices_to_scan >= center_index]
+    if not return_lower and not return_center:
+        return indices_to_scan[indices_to_scan > center_index]
 
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
     # Plot a 2D grid with a number of different options
 
     # fig = plt.figure()

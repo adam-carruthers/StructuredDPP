@@ -87,7 +87,7 @@ for i in range(3):
 for i, path_info in enumerate(best_paths_info):
     lines = ax.plot(*path_info['path'], label=f'{i}')
     print(i, path_info['value'])
-    neb_path = neb.neb_mep(path_info, POINTS_INFO, MIX_PARAMS, n_iterations=5000)
+    neb_path = neb.neb_mep(path_info, POINTS_INFO, MIX_PARAMS, n_max_iterations=5000)
     plt.plot(*neb_path, c=lines[0].get_color(), dashes=(2, 2))
 
 

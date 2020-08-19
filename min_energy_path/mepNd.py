@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 N_SPANNING_GAP = 6
 
 
-dims = list(range(2, 5))
+dims = list(range(2, 6))
 labels = [f'{dim}D' for dim in dims]
 label_pos = list(range(len(labels)))
 times = []
