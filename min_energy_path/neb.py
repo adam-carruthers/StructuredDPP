@@ -92,6 +92,12 @@ def neb(path_guess, mix_params, force_cutoff=10**-5, n_max_iterations=8000, k=1.
                 tip[:, at_critical & (~next_next_bigger)]*delta_e_min[np.newaxis, ~next_next_bigger[at_critical]] +
                 tim[:, at_critical & (~next_next_bigger)]*delta_e_max[np.newaxis, ~next_next_bigger[at_critical]]
         )
+        tang_norm = scila.norm(tangents, axis=0, keepdims=True)
+        if np.any(tang_norm < 1e-20):
+            logger.error(f"Tangent norm less than 1e-20 returning early after {i+1} iterations")
+            if return_force_history:
+                return path, force_history
+            return path
         tangents /= scila.norm(tangents, axis=0, keepdims=True)  # TODO: What if two points land on each other?
 
         # Calculate the distance between the points

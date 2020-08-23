@@ -178,7 +178,7 @@ def get_mix_params_info_decorator(n_iterations=1000, learning_rate=0.01, n_linsp
     return find_mix_info_decorator
 
 
-def plot_gaussian(mix_params):
+def plot_gaussian(mix_params, fig=None, ax=None):
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     # Plot the scalar field
@@ -201,7 +201,8 @@ def plot_gaussian(mix_params):
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
 
     # Plot everything
-    fig, ax = plt.subplots()
-    plt.pcolormesh(x_grid, y_grid, z_grid, cmap=cmap)
+    if fig is None:
+        fig, ax = plt.subplots()
+    ax.pcolormesh(x_grid, y_grid, z_grid, cmap=cmap)
     fig.colorbar(sm)
     ax.axis('equal')

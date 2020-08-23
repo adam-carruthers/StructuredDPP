@@ -1,10 +1,12 @@
 import time
 import logging
+import numpy as np
 import matplotlib.pyplot as plt
 
 from min_energy_path.path_helpers import generate_path_ftree_better
 import min_energy_path.gaussian_params as mix_params
 from min_energy_path.points_sphere import create_sphere_points
+from min_energy_path import neb
 
 
 logging.basicConfig(level=logging.INFO)
@@ -43,31 +45,40 @@ for dim in dims:
     ftree_time_cuml = time.time() - start_time
     ftree_time = ftree_time_cuml - sphere_time_cuml
 
-    vars = list(ftree.get_variables())
-    var_middle = vars[len(vars) // 2]
-
     # traversal, run = ftree.run_max_quality_forward(var_middle)
     # good_paths_start = get_good_path_start_samples(var_middle, run, POINTS_INFO, n_per_group=50)
     # good_paths_info = calculate_good_paths(good_paths_start, var_middle, traversal, run, ftree, POINTS_INFO)
 
-    traversal, run = ftree.run_max_quality_forward(ftree.root)
+    tail_var = next(iter(ftree.levels[-1]))
+    traversal, run = ftree.run_max_quality_forward(tail_var)
 
     forward_pass_cuml = time.time() - start_time
     forward_pass = forward_pass_cuml - ftree_time_cuml
 
-    root_max_m, root_max_m_assignment = ftree.root.calculate_max_message_assignment(run)
+    root_max_m, root_max_m_assignment = tail_var.calculate_max_message_assignment(run)
     logging.info(f'Max path has quality {root_max_m}, starting assigning')
-    assignment = ftree.get_max_from_start_assignment(ftree.root, root_max_m_assignment, traversal, run)
+    assignment = ftree.get_max_from_start_assignment(tail_var, root_max_m_assignment, traversal, run)
+
+    path_indexes = [assignment[var] for var in ftree.get_variables()]
+    path = np.array([
+        POINTS_INFO['sphere'][:, path_index] for path_index in path_indexes
+    ]).T
 
     assignment_time_cuml = time.time() - start_time
     assignment_time = assignment_time_cuml - forward_pass_cuml
 
-    times.append([sphere_time, ftree_time, forward_pass, assignment_time])
+    neb_path = neb.neb_mep({'path_indexes': path_indexes, 'path': path},
+                           POINTS_INFO, MIX_PARAMS, n_spanning_point_gap=2)
+
+    neb_time_cuml = time.time() - start_time
+    neb_time = neb_time_cuml - assignment_time_cuml
+
+    times.append([sphere_time, ftree_time, forward_pass, assignment_time, neb_time])
 
 fig, ax = plt.subplots()
 
-for i, time_type in enumerate(['Sphere', 'FTree', 'Forward', 'Assign']):
-    ax.barh(label_pos, [x[i] for x in times], left=[x[i-1] for x in times] if i else None, label=time_type)
+for i, time_type in enumerate(['Sphere', 'FTree', 'Forward', 'Assign', 'NEB']):
+    ax.barh(label_pos, [x[i] for x in times], left=[sum(x[:i]) for x in times] if i else None, label=time_type)
 
 ax.set_yticks(label_pos)
 ax.set_yticklabels(labels)

@@ -44,9 +44,8 @@ class MEPFactor(Factor):
         # So the quality from rootwards to leafwards is
         return self.transition_qualities[assignments[self.parent]].get(assignments[next(iter(self.children))], 0)
 
-    def create_message_special(self, to, value_of_to, run=None):
+    def create_message_special(self, to, value_of_to, parent, run=None):
         message = None
-        parent = self.parent
         fromm: MEPVariable = next(iter(self.children)) if to == parent else parent
 
         # Work out what set of points this value can reach
@@ -74,7 +73,8 @@ class MEPFactor(Factor):
         return message
 
     def create_all_messages_to(self, to, run=None):
-        fromm: Variable = next(iter(self.children)) if to == self.parent else self.parent
+        parent = self.parent
+        fromm: Variable = next(iter(self.children)) if to == parent else parent
         if (not isinstance(fromm, MEPVariable)) or (not isinstance(run, MaxProductRun)):
             return super(MEPFactor, self).create_all_messages_to(to, run)
 
@@ -82,7 +82,7 @@ class MEPFactor(Factor):
             self.outgoing_messages[run] = {}
 
         new_messages = {
-            val: self.create_message_special(to, val, run=run) for val in to.allowed_values
+            val: self.create_message_special(to, val, parent, run=run) for val in to.allowed_values
         }
         self.outgoing_messages[run][to] = new_messages
         return new_messages
