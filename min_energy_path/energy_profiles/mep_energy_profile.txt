@@ -1,0 +1,3 @@
+The JSON object is structured as follows
+
+object[dim where 0 is 2D, 1 is 3D, 2 is 4D, 3 is 5D][type where 0 is MRF and 1 is NEB][which run you want to examine][the node you want the energy of on the run]

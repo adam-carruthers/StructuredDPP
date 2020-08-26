@@ -34,7 +34,7 @@ def starter():
         'centre': mix_centre,
         'minima_guess': mix_centre[:, [0, -1]],
         'xbounds': (-2, 7),
-        'ybounds': (-5, 4)
+        'ybounds': (-3, 3)
     }
 
 @get_mix_params_info_decorator()

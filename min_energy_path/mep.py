@@ -14,9 +14,9 @@ logging.basicConfig(level=logging.INFO)
 
 results = []
 
-dims = [2, 3, 4, 5]
-for dim, n_iters in zip(dims, [100, 100, 100, 5]):
-    n_centres = 4**dim
+dims = [6]
+for dim, n_iters in zip(dims, [50]):
+    n_centres = 1250
 
     mrf_eps = []
     neb_eps = []
@@ -40,25 +40,32 @@ for dim, n_iters in zip(dims, [100, 100, 100, 5]):
             tuning_strength_diff=1.5,
             n_spanning_gap=N_SPANNING_GAP,
             n_slices_behind=0,
-            n_slices_ahead=1
+            n_slices_ahead=0
         )
 
-        # vars = list(ftree.get_variables())
-        # var_middle = vars[(len(vars) // 2)-1]
-        #
-        # traversal, run = ftree.run_max_quality_forward(var_middle)
-        # good_paths_start = get_good_path_start_samples(var_middle, run, POINTS_INFO, n_per_group=4)
-        # good_paths_info = calculate_good_paths(good_paths_start, var_middle, traversal, run, ftree, POINTS_INFO)
+        vars = list(ftree.get_variables())
+        var_middle = vars[(len(vars) // 2)-1]
 
-        assignment = ftree.get_max_quality()
+        traversal, run = ftree.run_max_quality_forward(var_middle)
+        good_paths_start = get_good_path_start_samples(var_middle, run, POINTS_INFO, n_per_group=4)
+        # Get the top 3 best paths
+        best_paths_start = {}
+        for i in range(4):
+            best = max(good_paths_start.keys(), key=lambda x: good_paths_start[x][1])
+            best_paths_start[best] = good_paths_start[best]
+            del good_paths_start[best]
+            if not good_paths_start:
+                break
+        best_paths_info = calculate_good_paths(best_paths_start, var_middle, traversal, run, ftree, POINTS_INFO)
 
-        path_indexes = [assignment[var] for var in ftree.get_variables()]
-        path = np.array([
-            POINTS_INFO['sphere'][:, path_index] for path_index in path_indexes
-        ]).T
-
-        mrf_neb = neb.neb_mep({'path_indexes': path_indexes, 'path': path},
-                              POINTS_INFO, MIX_PARAMS, n_spanning_point_gap=2, n_max_iterations=2500)
+        bestest_mrf_ep = None
+        for i, path_info in enumerate(best_paths_info):
+            mrf_neb = neb.neb_mep(path_info, POINTS_INFO, MIX_PARAMS,
+                                                n_spanning_point_gap=2, n_max_iterations=2500)
+            mrf_ep = gaussian_field(mrf_neb, MIX_PARAMS)
+            if bestest_mrf_ep is None or np.max(bestest_mrf_ep) > np.max(mrf_ep):
+                bestest_mrf_ep = mrf_ep
+        mrf_eps.append(bestest_mrf_ep)
 
         print(f'Running time {time.time() - start_time}')
 
@@ -74,8 +81,7 @@ for dim, n_iters in zip(dims, [100, 100, 100, 5]):
 
         # plot_gaussian(MIX_PARAMS, fig1, ax1)
         # ax1.plot(*mrf_neb, label='MRF')
-        mrf_ep = gaussian_field(mrf_neb, MIX_PARAMS)
-        mrf_eps.append(mrf_ep)
+
         # ax2.plot(mrf_ep, label='MRF')
 
         # for i, path_info in enumerate(good_paths_info):
@@ -101,9 +107,6 @@ for dim, n_iters in zip(dims, [100, 100, 100, 5]):
         # fig1.show()
         # fig2.show()
 
-        if np.max(neb_ep) + 0.2 < np.max(mrf_ep):
-            raise Exception('aaaa')
-
     results.append((mrf_eps, neb_eps))
 
 # breakdown_good_path(good_paths_info[3], ftree, quality_function, POINTS_INFO)
@@ -117,13 +120,25 @@ for dim, dim_r in zip(dims, results):
     ax.hist(neb_max - mrf_max, density=True)
     ax.set_xlabel('NEB Max - MRF Max')
     ax.set_ylabel('Frequency')
-    ax.set_title(f'Histogram of difference of MRF to NEB ({dim}D)')
+    ax.set_title(f'Histogram of difference of MRF to NEB ({dim}D) with multiselect')
     fig.show()
 
-fig, ax = plt.subplots()
-dim = 4
-ax.plot(results[dim-2][0][0])
-ax.plot(results[dim-2][1][0])
+results_json = [
+    [
+        [runn.tolist() for runn in part]
+        for part in dim
+    ]
+    for dim in results
+]
+
+from time import strftime
+with open(f'energy_profiles/{"".join(str(dim) for dim in dims)}{strftime("%Y%m%dT%H%M%S")}.json', 'w') as f:
+    import json
+    json.dump(results_json, f)
+# fig, ax = plt.subplots()
+# dim = 4
+# ax.plot(results[dim-2][0][0])
+# ax.plot(results[dim-2][1][0])
 
 # 2D 0.2 better 0.44
 # 2D ~same 0.93
@@ -131,5 +146,17 @@ ax.plot(results[dim-2][1][0])
 # 3D ~same 0.98
 # 4D 0.2 better 0.38
 # 4D ~same 0.9
-# 5D 0.2 better 0.6
+# 5D 0.2 better 0.34
+# 5D ~same 0.89
+
+# Multiselect version
+# 2D 0.2 better 0.43
+# 2D ~same 0.98
+# 3D 0.2 better 0.72
+# 3D ~same 1.0
+# 4D 0.2 better 0.58
+# 4D ~same 1.0
+# 5D 0.2 better 0.3
 # 5D ~same 1.0
+# 6D 0.2 better 0.06
+# 6D ~same 1.0

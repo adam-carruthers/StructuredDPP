@@ -3,17 +3,29 @@
 
 % Preamble
 \documentclass[11pt]{report}
-\usepackage[utf8]{inputenc}
 
 % Packages
+\usepackage[utf8]{inputenc}
 \usepackage{amsmath}
+\usepackage[a4paper, width=150mm, top=25mm, bottom=25mm]{geometry}
+\usepackage{graphicx}
+\graphicspath{ {./plots/} }
+
+\title{Finding Optimal Minimum Energy Pathways using Graphical Models}
+\author{Adam Carruthers}
 
 % Document
 \begin{document}
 
     \input{title}
 
-    \chapter*{Introduction}
-    Minimum energy pathways are important because\textellipsis
+    \chapter{Introduction}
+    \label{ch:into}
+    \input{intro}
 
+    \chapter{Algorithm structure}
+    \label{ch:algo_struct}
+    To understand
+    A Markov Random Field is a graph based probability distribution.
+    Each node in the graph $G$ can take a certain set of values, the
 \end{document}

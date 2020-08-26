@@ -165,6 +165,7 @@ def calculate_good_paths(start_sample, var, traversal, run, ftree, points_info):
     """
     path_infos = []
     for grp, (start_val, path_value) in start_sample.items():
+        logger.info(f'Starting assignment for path quality {path_value}')
         assignment = ftree.get_max_from_start_assignment(var, start_val, traversal, run)
         path_indexes = [assignment[var] for var in ftree.get_variables()]
         path = np.array([
@@ -214,18 +215,21 @@ def generate_transition_qualities(points_info, mix_params,
     # First, we work out which variables we need to calculate transitions from
     min_dir_index = max(points_info['root_dir_index']-n_slices_behind, 0)
     max_dir_index = points_info['tail_dir_index']+1+n_slices_ahead
-    to_calculate_from = points_info['spherey_index'][min_dir_index:max_dir_index, ...]
 
     # Then actually calculate, for each "from" point, the quality to each possible "to" point
     # from is rootwards, to is leafwards
     # transition_qualities[rootwards][leafwards]
     transition_qualities = {}
 
-    for from_pos, fromm in np.ndenumerate(to_calculate_from):
-        if fromm == -1:
+    for i, fromm in enumerate(points_info['sphere_index']):
+        if i % 500 == 0:
+            logger.info(f'Generating transition {i}')
+        from_pos = np.unravel_index(points_info['spherey_index_index'][fromm], points_info['spherey_index'].shape)
+        if from_pos[0] < min_dir_index or from_pos[0] > max_dir_index:
             continue
-        to_slices_behind = min_dir_index + from_pos[0] - n_slices_behind - n_slices_ahead + 1
-        to_slices_ahead = min_dir_index + from_pos[0] + n_slices_behind + n_slices_ahead + 2
+        to_slices_behind = from_pos[0] - n_slices_behind - n_slices_ahead + (
+            1 if fromm != points_info['root_index'] else 0)
+        to_slices_ahead = from_pos[0] + n_slices_behind + n_slices_ahead + 2
         to_calculate_idx = points_info['spherey_index'][
             (slice(max(to_slices_behind, min_dir_index), min(to_slices_ahead, max_dir_index)),) +
             tuple(
@@ -233,9 +237,7 @@ def generate_transition_qualities(points_info, mix_params,
                 for from_dim_pos in from_pos[1:]
             )
         ]
-        out = np.zeros_like(to_calculate_idx)
-        mask = ~np.isin(to_calculate_idx, [-1, fromm])
-        to_calculate_idx = to_calculate_idx[mask]
+        to_calculate_idx = to_calculate_idx[~np.isin(to_calculate_idx, [-1, fromm])]
         directions_length, to_calculate_idx, from_strength, midpoint_strengths, to_strengths, close_enough = \
             gaussian_field_for_better_quality(
                 points_info['sphere'][:, [fromm]], points_info['sphere'][:, to_calculate_idx], to_calculate_idx,
@@ -252,8 +254,24 @@ def generate_transition_qualities(points_info, mix_params,
                 / mix_params['max_line_strength_diff']
             )
         )
-        mask[mask] = close_enough
-        out[mask] = to_qualities
         transition_qualities[fromm] = dict(zip(to_calculate_idx, to_qualities))
+        if n_slices_behind == 0 and from_pos[0] >= points_info['tail_dir_index'] and fromm != points_info['tail_index']:
+            directions_length, to_calculate_idx, from_strength, midpoint_strengths, to_strengths, close_enough = \
+                gaussian_field_for_better_quality(
+                    points_info['sphere'][:, [fromm]], points_info['sphere'][:, [points_info['tail_index']]],
+                    np.array([points_info['tail_index']]),
+                    mix_params, length_cutoff, points_info['point_distance']
+                )
+            transition_qualities[fromm][points_info['tail_index']] = np.exp(
+                - tuning_dist * directions_length / points_info['point_distance']
+                - tuning_strength * (
+                    ((midpoint_strengths + to_strengths) / 2 - mix_params['min_minima_strength'])
+                    / mix_params['max_line_strength_diff']
+                )
+                - tuning_strength_diff * (
+                    np.maximum(np.maximum(midpoint_strengths, to_strengths) - from_strength, 0)
+                    / mix_params['max_line_strength_diff']
+                )
+            )[0]
 
     return transition_qualities

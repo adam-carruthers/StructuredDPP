@@ -204,5 +204,5 @@ def plot_gaussian(mix_params, fig=None, ax=None):
     if fig is None:
         fig, ax = plt.subplots()
     ax.pcolormesh(x_grid, y_grid, z_grid, cmap=cmap)
-    fig.colorbar(sm)
+    fig.colorbar(sm, ax=ax)
     ax.axis('equal')

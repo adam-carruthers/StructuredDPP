@@ -132,7 +132,7 @@ def neb(path_guess, mix_params, force_cutoff=10**-5, n_max_iterations=8000, k=1.
 
         old_force = force
 
-    logger.info(f'Finished NEB from max_iterations after {n_max_iterations} iterations')
+    logger.info(f'Finished NEB from max_iterations after {n_max_iterations} iterations with force {force_l2}')
 
     if return_force_history:
         return path, force_history

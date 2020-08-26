@@ -12,10 +12,10 @@ from min_energy_path import neb
 logging.basicConfig(level=logging.INFO)
 
 # First set up some constants we're going to need
-N_SPANNING_GAP = 6
+N_SPANNING_GAP = 5
 
 
-dims = list(range(2, 6))
+dims = [2, 3, 4, 5, 6, 7, 8]
 labels = [f'{dim}D' for dim in dims]
 label_pos = list(range(len(labels)))
 times = []
