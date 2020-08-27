@@ -24,11 +24,11 @@ When the gradient descent is run the path gets stuck in a high energy valley, wh
 \end{figure}
 
 In this paper we propose an algorithm that can efficiently explore the landscape and the possible paths.
-This algorithm is therefore able to find very promising initial path guesses that outperform naive NEB, and it even has the ability to quickly find a selection of paths that go through different areas of the energy landscape.
+This algorithm is therefore able to find very promising initial path guesses that outperform naive NEB, and it even has the ability to quickly find a selection of good paths that go through different areas of the energy landscape.
 We provide an analysis of how this algorithm performs in different situations - including the time it takes to run as well as the quality of the outputted paths.
 %cite pls
 We will refer to this algorithm as the Max-Product Message Passing (MPMP) algorithm.
-This is because MPMP is the main part of the algorithm that does the calculations to work out the best paths.
+This is because the already established MPMP algorithm is the main part of the program that does the calculations to work out the best paths.
 However, in some charts the process may be referred to as Markov Random Field (MRF), which is closely related to MPMP\@.
 
 \section{Basic MRF algorithm description}
@@ -45,9 +45,9 @@ This means that particularly in high dimensions, with a lot of space that you ne
 
 This method leaves us with a few important questions, which we will consider in the paper:
 \begin{itemize}
-    \item How do we decide the possible positions and transitions that our path could go through?
-    \item How do we define the quality of a point or a transition?
-    \item How do we make it all fit together?
+    \item How do we decide the possible positions and transitions that our path could go through? (Chapter~\ref{ch:algo_struct})
+    \item How do we define the quality of a point or a transition? (Chapter~\ref{ch:algo_struct})
+    \item How do we make it all fit together? (Chapter~\ref{ch:algo_struct})
     \item How long does this algorithm take to run?
     How does this compare to NEB?
     \item What are the other possible algorithms that might be able to do this?

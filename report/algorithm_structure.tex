@@ -1,0 +1,52 @@
+This chapter will walk through the algorithm step by step, along with why the different parts of the algorithm work well for this problem.
+
+\section{Markov Random Fields}
+\label{sec:mrfs}
+%cite cite cite
+To understand the Max-Product Message Passing algorithm you must first understand Markov Random Fields.
+A Markov Random Field is a graph based probability distribution.
+Each node in the graph $G$ can take a certain set of values.
+We will denote the random variable describing each node's value $Y_i$ and the random vector denoting all node's values $\mathbf{Y}$.
+If the nodes take a particular value we will call it an assignment, a node could take assignment $y_i$ and all the nodes could take assignment $\mathbf{y}$.
+Consider the graph below in Figure~\ref{fig:simple_graph}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{example graph.jpg}
+    \caption{A simple graph}
+    \label{fig:simple_graph}
+\end{figure}
+
+In a MRF, the probability of a particular assignment is given by a product over all the cliques of the graph - subsets that are fully connected.
+Each clique $c$ has a potential function $\phi_c$ that takes as an argument the assignment to the clique, which we will call $\mathbf{y}_c$.
+The equation for the probability is
+\begin{gather}
+    \mathbb{P}(\mathbf{Y} = \mathbf{y}) = \frac{1}{V} \prod_{c \in cliques(G)} \phi_c (\mathbf{y}_c) \label{eq:mrf} \\
+    \text{[in this case]}\; = \frac{1}{V} \phi_{\{0, 1, 2\}}(y_0, y_1, y_2) \phi_{\{1, 4\}}(y_1, y_4) \phi_{\{2, 3\}}(y_2, y_3),
+\end{gather}
+where $V$ is a normalisation constant.
+
+As a warning, the potential functions can also be referred to as the weight or quality functions.
+
+% cite
+In most (but not all) cases, we can factorise this into a factor graph, where factors represent the clique functions and the nodes they are connected to.
+We can now refer to variable nodes and factor nodes, and the probability of an assignment is the product of the factor node potential functions.
+The probability of an assignment is now a product of the factors, and the relationships in the graph become a lot easier to see.
+We can see how Figure~\ref{fig:simple_graph} factorises in Figure~\ref{fig:simple_fgraph}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{example fgraph.jpg}
+    \caption{Factorisation of Figure~\ref{fig:simple_graph} where nodes with a white background are variables and nodes with a black background are factors.}
+    \label{fig:simple_fgraph}
+\end{figure}
+
+\section{Representing a path as a factor graph}
+\label{sec:path_as_fg}
+\input{path_as_fg}
+
+\section{Max-Product Message Passing}
+\label{sec:mpmp}
+Defining a set of nodes that can take certain values, along with a quality function, is a good first step.
+However, how do you choose the best one?
+It is clearly impractical to test out every possible combination of values and work out the quality as this method would take an incredibly long, exponentially increasing amount of time.

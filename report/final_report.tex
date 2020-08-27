@@ -7,9 +7,16 @@
 % Packages
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage[a4paper, width=150mm, top=25mm, bottom=25mm]{geometry}
 \usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{placeins}
+\usepackage{amsfonts}
+
+% Settings
 \graphicspath{ {./plots/} }
+\renewcommand{\labelitemii}{$\square$}
 
 \title{Finding Optimal Minimum Energy Pathways using Graphical Models}
 \author{Adam Carruthers}
@@ -25,7 +32,6 @@
 
     \chapter{Algorithm structure}
     \label{ch:algo_struct}
-    To understand
-    A Markov Random Field is a graph based probability distribution.
-    Each node in the graph $G$ can take a certain set of values, the
+    \input{algorithm_structure}
+
 \end{document}

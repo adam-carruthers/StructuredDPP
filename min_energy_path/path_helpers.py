@@ -262,16 +262,17 @@ def generate_transition_qualities(points_info, mix_params,
                     np.array([points_info['tail_index']]),
                     mix_params, length_cutoff, points_info['point_distance']
                 )
-            transition_qualities[fromm][points_info['tail_index']] = np.exp(
-                - tuning_dist * directions_length / points_info['point_distance']
-                - tuning_strength * (
-                    ((midpoint_strengths + to_strengths) / 2 - mix_params['min_minima_strength'])
-                    / mix_params['max_line_strength_diff']
-                )
-                - tuning_strength_diff * (
-                    np.maximum(np.maximum(midpoint_strengths, to_strengths) - from_strength, 0)
-                    / mix_params['max_line_strength_diff']
-                )
-            )[0]
+            if close_enough[0]:
+                transition_qualities[fromm][points_info['tail_index']] = np.exp(
+                    - tuning_dist * directions_length / points_info['point_distance']
+                    - tuning_strength * (
+                        ((midpoint_strengths + to_strengths) / 2 - mix_params['min_minima_strength'])
+                        / mix_params['max_line_strength_diff']
+                    )
+                    - tuning_strength_diff * (
+                        np.maximum(np.maximum(midpoint_strengths, to_strengths) - from_strength, 0)
+                        / mix_params['max_line_strength_diff']
+                    )
+                )[0]
 
     return transition_qualities

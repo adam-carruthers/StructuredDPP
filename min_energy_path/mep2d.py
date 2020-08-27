@@ -17,7 +17,7 @@ results = []
 start_time = time.time()
 
 # First set up some constants we're going to need
-N_SPANNING_GAP = 4
+N_SPANNING_GAP = 14
 
 # Constants relating to the gaussian field
 MIX_PARAMS = gauss_params.starter()
@@ -32,8 +32,10 @@ ftree = generate_path_ftree_better(
     tuning_strength_diff=1.5,
     n_spanning_gap=N_SPANNING_GAP,
     n_slices_behind=0,
-    n_slices_ahead=0
+    n_slices_ahead=1
 )
+
+raise Exception('oop')
 
 vars = list(ftree.get_variables())
 var_middle = vars[(len(vars) // 2)-1]

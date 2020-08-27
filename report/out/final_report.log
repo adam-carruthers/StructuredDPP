@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.7) (preloaded format=pdflatex 2020.8.21)  25 AUG 2020 15:25
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.7) (preloaded format=pdflatex 2020.8.21)  27 AUG 2020 18:46
 entering extended mode
 **./final_report.tex
 (final_report.tex
@@ -85,6 +85,17 @@ LaTeX Font Info:    Redeclaring font encoding OMS on input line 734.
 LaTeX Info: Redefining \[ on input line 2859.
 LaTeX Info: Redefining \] on input line 2860.
 )
+("C:\Program Files\MiKTeX\tex/latex/amsfonts\amssymb.sty"
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+
+("C:\Program Files\MiKTeX\tex/latex/amsfonts\amsfonts.sty"
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+))
 ("C:\Program Files\MiKTeX\tex/latex/geometry\geometry.sty"
 Package: geometry 2020/01/02 v5.9 Page Geometry
 
@@ -132,28 +143,55 @@ File: pdftex.def 2018/01/08 v1.0l Graphics/color driver for pdftex
 \Gin@req@height=\dimen152
 \Gin@req@width=\dimen153
 )
+("C:\Program Files\MiKTeX\tex/latex/caption\subcaption.sty"
+Package: subcaption 2020/01/22 v1.3d Sub-captions (AR)
+
+("C:\Program Files\MiKTeX\tex/latex/caption\caption.sty"
+Package: caption 2020/05/30 v3.4k Customizing captions (AR)
+
+("C:\Program Files\MiKTeX\tex/latex/caption\caption3.sty"
+Package: caption3 2020/07/20 v1.12b caption3 kernel (AR)
+Package caption3 Info: TeX engine: e-TeX on input line 61.
+\captionmargin=\dimen154
+\captionmargin@=\dimen155
+\captionwidth=\dimen156
+\caption@tempdima=\dimen157
+\caption@indent=\dimen158
+\caption@parindent=\dimen159
+\caption@hangindent=\dimen160
+Package caption Info: Standard document class detected.
+)
+\c@caption@flags=\count192
+\c@continuedfloat=\count193
+)
+\c@subfigure=\count194
+\c@subtable=\count195
+)
+("C:\Program Files\MiKTeX\tex/latex/placeins\placeins.sty"
+Package: placeins 2005/04/18  v 2.2
+)
 ("C:\Program Files\MiKTeX\tex/latex/l3backend\l3backend-pdfmode.def"
 File: l3backend-pdfmode.def 2020-08-07 L3 backend support: PDF mode
-\l__kernel_color_stack_int=\count192
+\l__kernel_color_stack_int=\count196
 \l__pdf_internal_box=\box47
 )
 (C:/Users\adamj\PycharmProjects\StructuredDPP\report\out\final_report.aux)
 \openout1 = `final_report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -191,62 +229,134 @@ LaTeX Font Info:    ... okay on input line 18.
 
 ("C:\Program Files\MiKTeX\tex/context/base/mkii\supp-pdf.mkii"
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count193
-\scratchdimen=\dimen154
+\scratchcounter=\count197
+\scratchdimen=\dimen161
 \scratchbox=\box48
-\nofMPsegments=\count194
-\nofMParguments=\count195
+\nofMPsegments=\count198
+\nofMParguments=\count199
 \everyMPshowfont=\toks24
-\MPscratchCnt=\count196
-\MPscratchDim=\dimen155
-\MPnumerator=\count197
-\makeMPintoPDFobject=\count198
+\MPscratchCnt=\count266
+\MPscratchDim=\dimen162
+\MPnumerator=\count267
+\makeMPintoPDFobject=\count268
 \everyMPtoPDFconversion=\toks25
 ) ("C:\Program Files\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-base.sty"
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 85.
 )
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: End \AtBeginDocument code.
+
 (title.tex [1
 
 {C:/Users/adamj/AppData/Local/MiKTeX/pdftex/config/pdftex.map}])
 Chapter 1.
 (intro.tex
+LaTeX Font Info:    Trying to load font information for U+msa on input line 13.
+
+ ("C:\Program Files\MiKTeX\tex/latex/amsfonts\umsa.fd"
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 13.
+
+
+("C:\Program Files\MiKTeX\tex/latex/amsfonts\umsb.fd"
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
 <./plots/possible paths.png, id=8, 564.4287pt x 459.6372pt>
 File: ./plots/possible paths.png Graphic file (type png)
 <use ./plots/possible paths.png>
 Package pdftex.def Info: ./plots/possible paths.png  used on input line 21.
 (pdftex.def)             Requested size: 284.52756pt x 231.70467pt.
- [1
 
- <./plots/possible paths.png>]) [2]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[1
+
+]) [2 <./plots/possible paths.png>]
 Chapter 2.
-[3
+(algorithm_structure.tex
+<./plots/example graph.jpg, id=21, 200.24812pt x 150.5625pt>
+File: ./plots/example graph.jpg Graphic file (type jpg)
+<use ./plots/example graph.jpg>
+Package pdftex.def Info: ./plots/example graph.jpg  used on input line 15.
+(pdftex.def)             Requested size: 200.24763pt x 150.56212pt.
+ [3
 
-] (C:/Users\adamj\PycharmProjects\StructuredDPP\report\out\final_report.aux)
+ <./plots/example graph.jpg>]
+<./plots/example fgraph.jpg, id=31, 204.3886pt x 129.10735pt>
+File: ./plots/example fgraph.jpg Graphic file (type jpg)
+<use ./plots/example fgraph.jpg>
+Package pdftex.def Info: ./plots/example fgraph.jpg  used on input line 39.
+(pdftex.def)             Requested size: 204.38808pt x 129.10701pt.
+ (path_as_fg.tex
+<./plots/Circle Sampling.png, id=32, 642.4pt x 481.8pt>
+File: ./plots/Circle Sampling.png Graphic file (type png)
+<use ./plots/Circle Sampling.png>
+Package pdftex.def Info: ./plots/Circle Sampling.png  used on input line 21.
+(pdftex.def)             Requested size: 213.39566pt x 160.04578pt.
+<./plots/Sphere Sampling.png, id=33, 642.4pt x 481.8pt>
+File: ./plots/Sphere Sampling.png Graphic file (type png)
+<use ./plots/Sphere Sampling.png>
+Package pdftex.def Info: ./plots/Sphere Sampling.png  used on input line 27.
+(pdftex.def)             Requested size: 213.39566pt x 160.04578pt.
 
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
- ) 
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+<./plots/slicing.png, id=34, 364.9635pt x 328.1058pt>
+File: ./plots/slicing.png Graphic file (type png)
+<use ./plots/slicing.png>
+Package pdftex.def Info: ./plots/slicing.png  used on input line 41.
+(pdftex.def)             Requested size: 213.39566pt x 191.8485pt.
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[4 <./plots/example fgraph.jpg>] [5 <./plots/Circle Sampling.png (PNG copy)> <.
+/plots/Sphere Sampling.png (PNG copy)>]
+<./plots/Short ftree structure.png, id=41, 992.9898pt x 174.8934pt>
+File: ./plots/Short ftree structure.png Graphic file (type png)
+<use ./plots/Short ftree structure.png>
+Package pdftex.def Info: ./plots/Short ftree structure.png  used on input line 
+70.
+(pdftex.def)             Requested size: 426.79134pt x 75.17067pt.
+ [6 <./plots/slicing.png> <./plots/Short ftree structure.png>] [7]
+<./plots/incorrect paths.png, id=54, 642.4pt x 481.8pt>
+File: ./plots/incorrect paths.png Graphic file (type png)
+<use ./plots/incorrect paths.png>
+Package pdftex.def Info: ./plots/incorrect paths.png  used on input line 142.
+(pdftex.def)             Requested size: 298.75262pt x 224.07144pt.
+ [8 <./plots/incorrect paths.png (PNG copy)>]))
+[9] (C:/Users\adamj\PycharmProjects\StructuredDPP\report\out\final_report.aux) 
+) 
 Here is how much of TeX's memory you used:
- 2357 strings out of 481212
- 32562 string characters out of 2915727
- 282012 words of memory out of 3000000
- 17941 multiletter control sequences out of 15000+200000
- 542329 words of font info for 54 fonts, out of 3000000 for 9000
+ 4182 strings out of 481212
+ 62499 string characters out of 2915727
+ 306775 words of memory out of 3000000
+ 19719 multiletter control sequences out of 15000+200000
+ 545319 words of font info for 67 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 36i,8n,33p,324b,227s stack positions out of 5000i,500n,10000p,200000b,50000s
- <C:\Users\adamj\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm
-1095.pk><C:/Program Files/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/
-Program Files/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Program Files
-/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Program Files/MiKTeX/fonts
-/type1/public/amsfonts/cm/cmr6.pfb><C:/Program Files/MiKTeX/fonts/type1/public/
-amsfonts/cm/cmr8.pfb><C:/Program Files/MiKTeX/fonts/type1/public/amsfonts/cm/cm
-r9.pfb>
+ 45i,10n,47p,474b,458s stack positions out of 5000i,500n,10000p,200000b,50000s
+ <C:\Users\adamj\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1
+095.pk><C:/Program Files/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/P
+rogram Files/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Program Files
+/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Program Files/MiKTeX/font
+s/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Files/MiKTeX/fonts/type1/publ
+ic/amsfonts/cm/cmmi6.pfb><C:/Program Files/MiKTeX/fonts/type1/public/amsfonts/c
+m/cmmi8.pfb><C:/Program Files/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><
+C:/Program Files/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Program Fi
+les/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Program Files/MiKTeX/fon
+ts/type1/public/amsfonts/cm/cmr8.pfb><C:/Program Files/MiKTeX/fonts/type1/publi
+c/amsfonts/cm/cmr9.pfb><C:/Program Files/MiKTeX/fonts/type1/public/amsfonts/cm/
+cmsy10.pfb><C:/Program Files/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C
+:/Program Files/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb><C:/Progr
+am Files/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
 Output written on C:/Users\adamj\PycharmProjects\StructuredDPP\report\out\final
-_report.pdf (4 pages, 140921 bytes).
+_report.pdf (10 pages, 512610 bytes).
 PDF statistics:
- 47 PDF objects out of 1000 (max. 8388607)
+ 112 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 6 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 41 words of extra memory for PDF output out of 10000 (max. 10000000)
 
