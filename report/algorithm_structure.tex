@@ -32,7 +32,7 @@ As a warning, the potential functions can also be referred to as the weight or q
 In most (but not all) cases, we can factorise this into a factor graph, where factors represent the clique functions and the nodes they are connected to.
 We can now refer to variable nodes and factor nodes, and the probability of an assignment is the product of the factor node potential functions.
 The probability of an assignment is now a product of the factors, and the relationships in the graph become a lot easier to see.
-We can see how Figure~\ref{fig:simple_graph} factorises in Figure~\ref{fig:simple_fgraph}.
+We can see how Figure~\ref{fig:simple_graph} factorises in Figure~\ref{fig:simple_fgraph}, and note that the graph is now bipartite.
 
 \begin{figure}[h]
     \centering
@@ -50,3 +50,8 @@ We can see how Figure~\ref{fig:simple_graph} factorises in Figure~\ref{fig:simpl
 Defining a set of nodes that can take certain values, along with a quality function, is a good first step.
 However, how do you choose the best one?
 It is clearly impractical to test out every possible combination of values and work out the quality as this method would take an incredibly long, exponentially increasing amount of time.
+This is where message passing comes in.
+
+In graphs structured as a tree, we can calculate messages - starting at the "leaves" of the tree and working towards the root.
+The root we pick can be any node on the factor graph.
+Messages have four parts: who they are from, who they are to, the assignment the message is about, and the actual message value itself (which is a real number).

@@ -35,7 +35,7 @@ However, in some charts the process may be referred to as Markov Random Field (M
 \label{sec:basic_algo}
 The algorithm effectively defines the path by a number of points.
 It works along the path step by step, testing a number of positions for each point and working out the how good that possible position is.
-When working out the quality of a position it incorporates the quality of all the points leading up to that position using an algorithm called max-produce message passing.
+When working out the quality of a position it incorporates the quality of all the points leading up to that position using an algorithm called max-product message passing.
 If effectively scans the points that lead up to each position and picks the preceeding path that maximises its quality.
 
 Once we have found the path we then smooth out the generated path with the Nudged Elastic Band method, as if our suggested path is close to the minimum path then NEB should converge to it.

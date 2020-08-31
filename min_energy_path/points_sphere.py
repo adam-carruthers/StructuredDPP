@@ -218,13 +218,13 @@ if __name__ == "__main__":
     ]).T
     points_info = create_sphere_points(my_minima, 8)
 
-    plt.plot(*my_minima, 'r-')
+    plt.plot(*my_minima, 'rx-', linewidth=3, markersize=15)
     plt.scatter(*points_info['sphere'], c='b')
-    for i, point in zip(points_info['sphere_index'], points_info['sphere'].T):
-        plt.annotate(i, point)
-
-    indexes_near = get_nearby_sphere_indexes(57, 3, points_info, slices_behind=1, slices_ahead=6)
-    plt.scatter(*points_info['sphere'][:, indexes_near], c='r', zorder=5)
+    # for i, point in zip(points_info['sphere_index'], points_info['sphere'].T):
+    #     plt.annotate(i, point)
+    #
+    # indexes_near = get_nearby_sphere_indexes(57, 3, points_info, slices_behind=1, slices_ahead=6)
+    # plt.scatter(*points_info['sphere'][:, indexes_near], c='r', zorder=5)
 
 #     basis_3d = create_sphere_basis(np.array([
 #         [0, 0],

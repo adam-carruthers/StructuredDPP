@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.7) (preloaded format=pdflatex 2020.8.21)  27 AUG 2020 18:46
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.7) (preloaded format=pdflatex 2020.8.21)  31 AUG 2020 09:07
 entering extended mode
 **./final_report.tex
 (final_report.tex
@@ -295,38 +295,36 @@ Package pdftex.def Info: ./plots/example fgraph.jpg  used on input line 39.
 <./plots/Circle Sampling.png, id=32, 642.4pt x 481.8pt>
 File: ./plots/Circle Sampling.png Graphic file (type png)
 <use ./plots/Circle Sampling.png>
-Package pdftex.def Info: ./plots/Circle Sampling.png  used on input line 21.
+Package pdftex.def Info: ./plots/Circle Sampling.png  used on input line 26.
 (pdftex.def)             Requested size: 213.39566pt x 160.04578pt.
 <./plots/Sphere Sampling.png, id=33, 642.4pt x 481.8pt>
 File: ./plots/Sphere Sampling.png Graphic file (type png)
 <use ./plots/Sphere Sampling.png>
-Package pdftex.def Info: ./plots/Sphere Sampling.png  used on input line 27.
+Package pdftex.def Info: ./plots/Sphere Sampling.png  used on input line 32.
 (pdftex.def)             Requested size: 213.39566pt x 160.04578pt.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<./plots/slicing.png, id=34, 364.9635pt x 328.1058pt>
+[4 <./plots/example fgraph.jpg>]
+<./plots/slicing.png, id=37, 364.9635pt x 328.1058pt>
 File: ./plots/slicing.png Graphic file (type png)
 <use ./plots/slicing.png>
-Package pdftex.def Info: ./plots/slicing.png  used on input line 41.
+Package pdftex.def Info: ./plots/slicing.png  used on input line 46.
 (pdftex.def)             Requested size: 213.39566pt x 191.8485pt.
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[4 <./plots/example fgraph.jpg>] [5 <./plots/Circle Sampling.png (PNG copy)> <.
-/plots/Sphere Sampling.png (PNG copy)>]
-<./plots/Short ftree structure.png, id=41, 992.9898pt x 174.8934pt>
+ [5 <./plots/Circle Sampling.png (PNG copy)> <./plots/Sphere Sampling.png (PNG 
+copy)> <./plots/slicing.png>]
+<./plots/Short ftree structure.png, id=42, 992.9898pt x 174.8934pt>
 File: ./plots/Short ftree structure.png Graphic file (type png)
 <use ./plots/Short ftree structure.png>
 Package pdftex.def Info: ./plots/Short ftree structure.png  used on input line 
-70.
+75.
 (pdftex.def)             Requested size: 426.79134pt x 75.17067pt.
- [6 <./plots/slicing.png> <./plots/Short ftree structure.png>] [7]
+ [6 <./plots/Short ftree structure.png>] [7]
 <./plots/incorrect paths.png, id=54, 642.4pt x 481.8pt>
 File: ./plots/incorrect paths.png Graphic file (type png)
 <use ./plots/incorrect paths.png>
-Package pdftex.def Info: ./plots/incorrect paths.png  used on input line 142.
+Package pdftex.def Info: ./plots/incorrect paths.png  used on input line 147.
 (pdftex.def)             Requested size: 298.75262pt x 224.07144pt.
  [8 <./plots/incorrect paths.png (PNG copy)>]))
 [9] (C:/Users\adamj\PycharmProjects\StructuredDPP\report\out\final_report.aux) 
@@ -354,7 +352,7 @@ cmsy10.pfb><C:/Program Files/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C
 :/Program Files/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb><C:/Progr
 am Files/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
 Output written on C:/Users\adamj\PycharmProjects\StructuredDPP\report\out\final
-_report.pdf (10 pages, 512610 bytes).
+_report.pdf (10 pages, 513318 bytes).
 PDF statistics:
  112 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
